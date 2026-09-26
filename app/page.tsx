@@ -1,6 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  defaultHomepageContent,
+  getHomepageContent,
+  type HomepageContent,
+} from "@/lib/cms/homepage";
 
 const categories = [
   { name: "Marquee", image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=85" },
@@ -19,6 +24,16 @@ const services = [
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [content, setContent] =
+    useState<HomepageContent>(defaultHomepageContent);
+
+  useEffect(() => {
+    getHomepageContent()
+      .then(setContent)
+      .catch((error) =>
+        console.error("Failed to load homepage CMS content:", error)
+      );
+  }, []);
 
   return (
     <main>
@@ -28,8 +43,8 @@ export default function Home() {
         <a className="brand" href="#home" aria-label="Reis Invent Service home">
           <span className="brand-mark">RIS</span>
           <span className="brand-copy">
-            <strong>REIS INVENT</strong>
-            <small>SERVICE</small>
+            <strong>{content.brandName}</strong>
+            <small>{content.brandSubtext}</small>
           </span>
         </a>
 
@@ -53,7 +68,7 @@ export default function Home() {
         <div className="hero-overlay" />
         <div className="hero-content">
           <p className="eyebrow light">EVENT RENTALS · STYLING · DETAILS</p>
-          <h1>We style your event.<br /><em>You create memories.</em></h1>
+          <h1>{content.heroTitle.split(".")[0]}.<br /><em>You create memories.</em></h1>
           <p className="hero-text">
             Beautifully considered rentals and event essentials for celebrations
             that deserve to feel unforgettable.
@@ -69,8 +84,8 @@ export default function Home() {
       <section id="rentals" className="section cream">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">THE COLLECTION</p>
-            <h2>Everything your<br /><em>event needs.</em></h2>
+            <p className="eyebrow">{content.featuredEyebrow}</p>
+            <h2>{content.featuredTitle}</h2>
           </div>
           <p className="section-intro">
             Explore a growing collection of event furniture, décor, catering
@@ -140,7 +155,7 @@ export default function Home() {
       <section id="about" className="about-section">
         <div className="about-image" />
         <div className="about-copy">
-          <p className="eyebrow">ABOUT REIS INVENT</p>
+          <p className="eyebrow">{content.aboutEyebrow}</p>
           <h2>Set the scene.<br /><em>Make it yours.</em></h2>
           <p>
             Reis Invent Service is being designed around one simple idea:
@@ -169,8 +184,8 @@ export default function Home() {
         <div className="footer-brand">
           <span className="brand-mark">RIS</span>
           <div>
-            <strong>REIS INVENT</strong>
-            <small>SERVICE</small>
+            <strong>{content.brandName}</strong>
+            <small>{content.brandSubtext}</small>
           </div>
         </div>
         <p>We style your event, You create memories!</p>

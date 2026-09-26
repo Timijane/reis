@@ -5,6 +5,11 @@ import { sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/aut
 import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { auth } from "@/lib/firebase";
+import {
+  defaultHomepageContent,
+  getHomepageContent,
+  type HomepageContent,
+} from "@/lib/cms/homepage";
 import { getAuthorizedAdmin } from "@/lib/admin/auth";
 
 export default function AdminLoginPage() {
@@ -18,6 +23,8 @@ export default function AdminLoginPage() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [error, setError] = useState("");
   const [resetMessage, setResetMessage] = useState("");
+  const [content, setContent] =
+    useState<HomepageContent>(defaultHomepageContent);
 
   useEffect(() => {
     let mounted = true;
@@ -45,6 +52,12 @@ export default function AdminLoginPage() {
     };
 
     checkExistingSession();
+
+    getHomepageContent()
+      .then(setContent)
+      .catch((error) =>
+        console.error("Failed to load login CMS content:", error)
+      );
 
     return () => {
       mounted = false;
@@ -167,10 +180,20 @@ export default function AdminLoginPage() {
         <div className="admin-auth-overlay" />
 
         <div className="admin-auth-visual-content">
-          <div className="admin-auth-mark">REIS</div>
+          <div className="admin-auth-mark">
+                    {content.logoUrl ? (
+                      <img
+                        src={content.logoUrl}
+                        alt={content.brandName}
+                        className="admin-auth-logo"
+                      />
+                    ) : (
+                      "REIS"
+                    )}
+                  </div>
 
           <div className="admin-auth-visual-copy">
-            <p className="admin-auth-eyebrow">REIS EVENT SERVICES</p>
+            <p className="admin-auth-eyebrow">{content.brandName} {content.brandSubtext}</p>
             <h1>
               We style your event,
               <br />
@@ -195,8 +218,8 @@ export default function AdminLoginPage() {
           <div className="admin-auth-brand">
             <span className="admin-auth-brand-symbol">R</span>
             <div>
-              <strong>REIS</strong>
-              <small>EVENT SERVICES</small>
+              <strong>{content.brandName}</strong>
+              <small>{content.brandSubtext}</small>
             </div>
           </div>
 

@@ -35,5 +35,10 @@ service cloud.firestore {
 
       allow create, update, delete: if false;
     }
+
+    match /siteContent/homepage {
+      allow read: if true;
+      allow write: if isAuthorizedAdmin();
+    }
   }
 }
