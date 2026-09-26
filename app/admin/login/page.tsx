@@ -106,7 +106,10 @@ export default function AdminLoginPage() {
       } else if (code === "auth/invalid-email") {
         setError("Please enter a valid email address.");
       } else {
-        setError("Unable to sign in. Please try again.");
+        const message =
+          err instanceof Error ? err.message : "Unknown authentication error.";
+
+        setError(`Authentication error: ${message}`);
       }
     } finally {
       setLoading(false);
