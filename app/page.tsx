@@ -94,7 +94,7 @@ export default function Home() {
         <div
           className="hero-image"
           style={{
-            backgroundImage: `url("${content.gallery1Image}")`,
+            backgroundImage: `url("${content.heroImage}")`,
           }}
         />
         <div className="hero-overlay" />
@@ -196,7 +196,7 @@ export default function Home() {
         <div className="editorial-gallery">
           <div
             className="gallery-tall gallery-image g1"
-            style={{ backgroundImage: `url("${content.heroImage}")` }}
+            style={{ backgroundImage: `url("${content.gallery1Image}")` }}
           />
           <div
             className="gallery-image g2"

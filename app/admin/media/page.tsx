@@ -1,24 +1,9 @@
 "use client";
 
-import Script from "next/script";
 import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowLeft,
-  Check,
-  ChevronDown,
-  ImagePlus,
-  Loader2,
-  Upload,
-  X,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import {
-  getHomepageContent,
-  saveHomepageContent,
-  defaultHomepageContent,
-  type HomepageContent,
-} from "@/lib/cms/homepage";
-import { watchAdminAuth, type AdminUser } from "@/lib/admin/auth";
+import { Upload, RotateCcw, Save, Image as ImageIcon } from "lucide-react";
+import { getHomepageContent, saveHomepageContent } from "@/lib/cms/homepage";
+import type { HomepageContent } from "@/lib/cms/homepage";
 import "./media.css";
 
 declare global {
@@ -27,624 +12,335 @@ declare global {
       createUploadWidget: (
         options: Record<string, unknown>,
         callback: (error: unknown, result: any) => void
-      ) => {
-        open: () => void;
-      };
+      ) => { open: () => void };
     };
   }
 }
 
-const CLOUD_NAME = "dmbjrohtn";
-const UPLOAD_PRESET = "pelumi";
+type SlotKey =
+  | "logoUrl"
+  | "heroImage"
+  | "rental1Image"
+  | "rental2Image"
+  | "rental3Image"
+  | "rental4Image"
+  | "rental5Image"
+  | "rental6Image"
+  | "gallery1Image"
+  | "gallery2Image"
+  | "gallery3Image"
+  | "gallery4Image"
+  | "gallery5Image"
+  | "aboutImage";
 
-const IMAGE_SLOTS = [
-  { id: "logoUrl", label: "Global Logo", group: "Brand" },
-  { id: "heroImage", label: "Hero Section", group: "Homepage" },
+type Slot = {
+  key: SlotKey;
+  title: string;
+  section: string;
+  label?: string;
+};
 
-  { id: "rental1Image", label: "Rental 01", group: "Rentals" },
-  { id: "rental2Image", label: "Rental 02", group: "Rentals" },
-  { id: "rental3Image", label: "Rental 03", group: "Rentals" },
-  { id: "rental4Image", label: "Rental 04", group: "Rentals" },
-  { id: "rental5Image", label: "Rental 05", group: "Rentals" },
-  { id: "rental6Image", label: "Rental 06", group: "Rentals" },
+const SLOTS: Slot[] = [
+  { key: "logoUrl", title: "Brand Logo", section: "BRAND" },
 
-  { id: "gallery1Image", label: "Gallery 01", group: "Gallery" },
-  { id: "gallery2Image", label: "Gallery 02", group: "Gallery" },
-  { id: "gallery3Image", label: "Gallery 03", group: "Gallery" },
-  { id: "gallery4Image", label: "Gallery 04", group: "Gallery" },
-  { id: "gallery5Image", label: "Gallery 05", group: "Gallery" },
+  { key: "heroImage", title: "Hero Image", section: "HERO" },
 
-  { id: "aboutImage", label: "About", group: "About" },
-] as const;
+  { key: "rental1Image", title: "Rental 01", section: "RENTALS", label: "Marquee" },
+  { key: "rental2Image", title: "Rental 02", section: "RENTALS", label: "Foldable Chairs" },
+  { key: "rental3Image", title: "Rental 03", section: "RENTALS", label: "Chiavari Chairs" },
+  { key: "rental4Image", title: "Rental 04", section: "RENTALS", label: "Tables" },
+  { key: "rental5Image", title: "Rental 05", section: "RENTALS", label: "Arches & Florals" },
+  { key: "rental6Image", title: "Rental 06", section: "RENTALS", label: "Catering Hire" },
 
-type ImageSlotId = (typeof IMAGE_SLOTS)[number]["id"];
+  { key: "gallery1Image", title: "Gallery 01", section: "OUR WORK" },
+  { key: "gallery2Image", title: "Gallery 02", section: "OUR WORK" },
+  { key: "gallery3Image", title: "Gallery 03", section: "OUR WORK" },
+  { key: "gallery4Image", title: "Gallery 04", section: "OUR WORK" },
+  { key: "gallery5Image", title: "Gallery 05", section: "OUR WORK" },
 
-type SlotStatus = "default" | "assigned" | "unassigned";
-
-function getStatus(
-  slot: ImageSlotId,
-  homepage: HomepageContent
-): SlotStatus {
-  const current = homepage[slot];
-
-  if (typeof current !== "string" || !current.trim()) {
-    return "unassigned";
-  }
-
-  const defaultValue = defaultHomepageContent[slot];
-
-  if (current === defaultValue) {
-    return "default";
-  }
-
-  return "assigned";
-}
-
-function getSlotValue(
-  slot: ImageSlotId,
-  homepage: HomepageContent
-) {
-  const value = homepage[slot];
-  return typeof value === "string" ? value : "";
-}
-
-function getFilename(url: string, label: string) {
-  if (!url) return label;
-
-  try {
-    const pathname = new URL(url).pathname;
-    const filename = pathname.split("/").pop();
-
-    if (filename) {
-      return decodeURIComponent(filename);
-    }
-  } catch {
-    // Fall back to the slot name.
-  }
-
-  return label;
-}
+  { key: "aboutImage", title: "About Image", section: "ABOUT" },
+];
 
 export default function MediaPage() {
-  const router = useRouter();
-
-  const [admin, setAdmin] = useState<AdminUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [homepage, setHomepage] =
-    useState<HomepageContent>(defaultHomepageContent);
-
-  const [selectedSlot, setSelectedSlot] =
-    useState<ImageSlotId>("logoUrl");
-
-  const [uploadedUrl, setUploadedUrl] = useState("");
-  const [uploadedFilename, setUploadedFilename] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [assigning, setAssigning] = useState(false);
-
-  const [uploadModalOpen, setUploadModalOpen] =
-    useState(false);
-
-  const selectedDefinition = useMemo(
-    () =>
-      IMAGE_SLOTS.find(
-        (slot) => slot.id === selectedSlot
-      ) || IMAGE_SLOTS[0],
-    [selectedSlot]
-  );
-
-  const selectedUrl = getSlotValue(
-    selectedSlot,
-    homepage
-  );
-
-  const selectedStatus = getStatus(
-    selectedSlot,
-    homepage
-  );
-
-  async function loadHomepage() {
-    try {
-      const content = await getHomepageContent();
-      setHomepage(content);
-    } catch (error) {
-      console.error(
-        "Failed to load homepage media:",
-        error
-      );
-    }
-  }
+  const [content, setContent] = useState<HomepageContent | null>(null);
+  const [selected, setSelected] = useState<SlotKey>("heroImage");
+  const [pending, setPending] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const unsubscribe = watchAdminAuth(
-      (_, currentAdmin, authLoading) => {
-        if (authLoading) return;
+    getHomepageContent().then(setContent);
+  }, []);
 
-        if (!currentAdmin) {
-          router.replace("/admin/login");
-          return;
-        }
+  const grouped = useMemo(() => {
+    return SLOTS.reduce<Record<string, Slot[]>>((acc, slot) => {
+      if (!acc[slot.section]) acc[slot.section] = [];
+      acc[slot.section].push(slot);
+      return acc;
+    }, {});
+  }, []);
 
-        setAdmin(currentAdmin);
-        setLoading(false);
-        loadHomepage();
-      }
-    );
+  function openUpload(slot: SlotKey) {
+    setSelected(slot);
+    setMessage("");
 
-    return unsubscribe;
-  }, [router]);
-
-  function openUploader() {
-    if (!window.cloudinary || !admin) {
-      alert(
-        "The image uploader is still loading. Please try again."
-      );
+    if (!window.cloudinary) {
+      setMessage("Cloudinary uploader is not available.");
       return;
     }
 
-    setUploading(true);
-
-    const widget =
-      window.cloudinary.createUploadWidget(
-        {
-          cloudName: CLOUD_NAME,
-          uploadPreset: UPLOAD_PRESET,
-          multiple: false,
-          maxFileSize: 10000000,
-          clientAllowedFormats: [
-            "jpg",
-            "jpeg",
-            "png",
-            "webp",
-          ],
-          sources: ["local", "camera"],
-          folder: "reis-event-services",
-        },
-        (error, result) => {
-          if (error) {
-            console.error(
-              "Cloudinary upload error:",
-              error
-            );
-            setUploading(false);
-            return;
-          }
-
-          if (result?.event === "success") {
-            const info = result.info;
-
-            setUploadedUrl(
-              info.secure_url || ""
-            );
-
-            setUploadedFilename(
-              info.original_filename ||
-                selectedDefinition.label
-            );
-
-            setUploadModalOpen(false);
-            setUploading(false);
-          }
-
-          if (result?.event === "close") {
-            setUploading(false);
-          }
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: "dmbjrohtn",
+        uploadPreset: "pelumi",
+        folder: "reis-event-services",
+        sources: ["local", "camera"],
+        multiple: false,
+        maxFileSize: 10000000,
+        clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+        cropping: false,
+      },
+      (error, result) => {
+        if (error) {
+          console.error(error);
+          setMessage("Upload failed.");
+          return;
         }
-      );
+
+        if (result?.event === "success") {
+          setPending((current) => ({
+            ...current,
+            [slot]: result.info.secure_url,
+          }));
+          setMessage(`${slot} uploaded. Click Save Assignment to apply it.`);
+        }
+      }
+    );
 
     widget.open();
   }
 
-  async function assignUploadedImage() {
-    if (!uploadedUrl) {
-      alert("Upload an image first.");
-      return;
-    }
+  async function assign(slot: SlotKey) {
+    if (!content || !pending[slot]) return;
 
-    setAssigning(true);
+    setSaving(true);
+    setMessage("");
 
     try {
-      const updated = {
-        ...homepage,
-        [selectedSlot]: uploadedUrl,
-      };
+      const next = {
+        ...content,
+        [slot]: pending[slot],
+      } as HomepageContent;
 
-      await saveHomepageContent(updated);
+      await saveHomepageContent(next);
+      setContent(next);
 
-      setHomepage(updated);
-      setUploadedUrl("");
-      setUploadedFilename("");
+      setPending((current) => {
+        const copy = { ...current };
+        delete copy[slot];
+        return copy;
+      });
 
-      alert(
-        `${selectedDefinition.label} has been assigned successfully.`
-      );
+      setMessage("Image assigned successfully.");
     } catch (error) {
-      console.error(
-        "Could not assign image:",
-        error
-      );
-
-      alert(
-        "The image was uploaded, but the assignment could not be saved."
-      );
+      console.error(error);
+      setMessage("Could not save the assignment.");
     } finally {
-      setAssigning(false);
+      setSaving(false);
     }
   }
 
-  async function resetToDefault() {
-    const defaultValue =
-      defaultHomepageContent[selectedSlot];
+  async function restoreDefault(slot: SlotKey) {
+    if (!content) return;
 
-    if (!defaultValue) {
-      const updated = {
-        ...homepage,
-        [selectedSlot]: "",
-      };
+    const defaults = await getHomepageContent();
 
-      await saveHomepageContent(updated);
-      setHomepage(updated);
-      return;
-    }
+    const next = {
+      ...content,
+      [slot]: defaults[slot],
+    } as HomepageContent;
 
-    const confirmed = window.confirm(
-      `Restore ${selectedDefinition.label} to its default image?`
-    );
-
-    if (!confirmed) return;
+    setSaving(true);
 
     try {
-      const updated = {
-        ...homepage,
-        [selectedSlot]: defaultValue,
-      };
-
-      await saveHomepageContent(updated);
-      setHomepage(updated);
-
-      setUploadedUrl("");
-      setUploadedFilename("");
-    } catch (error) {
-      console.error(
-        "Could not restore default image:",
-        error
-      );
-
-      alert("Could not restore the default image.");
+      await saveHomepageContent(next);
+      setContent(next);
+      setPending((current) => {
+        const copy = { ...current };
+        delete copy[slot];
+        return copy;
+      });
+      setMessage("Default image restored.");
+    } finally {
+      setSaving(false);
     }
   }
 
-  if (loading) {
-    return (
-      <main className="media-loading">
-        <Loader2 className="spin" size={22} />
-        Loading media manager...
-      </main>
-    );
+  if (!content) {
+    return <div className="media-loading">Loading media manager…</div>;
   }
 
   return (
-    <>
-      <Script
-        src="https://upload-widget.cloudinary.com/global/all.js"
-        strategy="afterInteractive"
-      />
+    <main className="media-page">
+      <header className="media-header">
+        <div>
+          <p className="media-kicker">REIS EVENT · CONTENT</p>
+          <h1>Media Manager</h1>
+          <p>
+            Manage the exact images used across the public website.
+            Upload first, then assign only when you are ready.
+          </p>
+        </div>
+      </header>
 
-      <main className="media-page">
-        <header className="media-header">
-          <div>
-            <button
-              className="back-button"
-              onClick={() => router.push("/admin")}
-            >
-              <ArrowLeft size={16} />
-              Dashboard
-            </button>
+      {message && <div className="media-message">{message}</div>}
 
-            <div className="media-eyebrow">
-              REIS EVENT SERVICES · MEDIA
-            </div>
+      <div className="media-layout">
+        <aside className="media-sidebar">
+          {Object.entries(grouped).map(([section, slots]) => (
+            <div className="media-group" key={section}>
+              <div className="media-group-title">{section}</div>
 
-            <h1>Media Manager</h1>
-
-            <p>
-              Manage the exact images assigned to
-              every visual position on the website.
-            </p>
-          </div>
-        </header>
-
-        <section className="media-manager">
-          <div className="media-manager-sidebar">
-            <div className="media-selector-label">
-              WEBSITE IMAGE
-            </div>
-
-            <div className="media-dropdown">
-              <ChevronDown size={17} />
-
-              <select
-                value={selectedSlot}
-                onChange={(event) =>
-                  setSelectedSlot(
-                    event.target.value as ImageSlotId
-                  )
-                }
-              >
-                {IMAGE_SLOTS.map((slot) => (
-                  <option
-                    key={slot.id}
-                    value={slot.id}
-                  >
-                    {slot.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="media-slot-list">
-              {IMAGE_SLOTS.map((slot) => {
-                const status = getStatus(
-                  slot.id,
-                  homepage
-                );
+              {slots.map((slot) => {
+                const image =
+                  pending[slot.key] || String(content[slot.key] || "");
 
                 return (
                   <button
-                    key={slot.id}
-                    className={
-                      selectedSlot === slot.id
-                        ? "media-slot active"
-                        : "media-slot"
-                    }
-                    onClick={() =>
-                      setSelectedSlot(slot.id)
-                    }
+                    type="button"
+                    key={slot.key}
+                    className={`media-nav-item ${
+                      selected === slot.key ? "active" : ""
+                    }`}
+                    onClick={() => setSelected(slot.key)}
                   >
-                    <span className="media-slot-name">
-                      {slot.label}
+                    <span className="media-nav-thumb">
+                      {image ? (
+                        <img src={image} alt="" />
+                      ) : (
+                        <ImageIcon size={18} />
+                      )}
                     </span>
 
-                    <span
-                      className={`media-slot-status ${status}`}
-                    >
-                      {status === "default"
-                        ? "DEFAULT"
-                        : status === "assigned"
-                          ? "ASSIGNED"
-                          : "NOT ASSIGNED"}
+                    <span>
+                      <strong>{slot.title}</strong>
+                      {slot.label && <small>{slot.label}</small>}
                     </span>
                   </button>
                 );
               })}
             </div>
-          </div>
+          ))}
+        </aside>
 
-          <div className="media-manager-main">
-            <div className="media-manager-heading">
-              <div>
-                <span>
-                  {selectedDefinition.group}
-                </span>
-
-                <h2>
-                  {selectedDefinition.label}
-                </h2>
-              </div>
-
-              <div
-                className={`media-current-status ${selectedStatus}`}
-              >
-                {selectedStatus === "default"
-                  ? "DEFAULT"
-                  : selectedStatus === "assigned"
-                    ? "ASSIGNED"
-                    : "NOT ASSIGNED"}
-              </div>
-            </div>
-
-            <div className="media-current-image">
-              {selectedUrl ? (
+        <section className="media-workspace">
+          <div className="media-preview-panel">
+            <div className="media-preview-image">
+              {pending[selected] || content[selected] ? (
                 <img
-                  src={selectedUrl}
-                  alt={selectedDefinition.label}
+                  src={pending[selected] || String(content[selected])}
+                  alt={selected}
                 />
               ) : (
-                <div className="media-no-image">
-                  <ImagePlus size={36} />
-                  <strong>
-                    No image assigned
-                  </strong>
-                  <span>
-                    Upload an image for this
-                    website position.
-                  </span>
+                <div className="media-empty">
+                  <ImageIcon size={36} />
+                  <span>No image assigned</span>
                 </div>
               )}
             </div>
 
-            <div className="media-current-details">
-              <div>
-                <span>CURRENT IMAGE</span>
+            <div className="media-preview-info">
+              <span className="media-section-label">
+                {SLOTS.find((item) => item.key === selected)?.section}
+              </span>
 
-                <strong>
-                  {selectedUrl
-                    ? uploadedUrl &&
-                      uploadedUrl === selectedUrl
-                      ? uploadedFilename
-                      : getFilename(
-                          selectedUrl,
-                          selectedDefinition.label
-                        )
-                    : "None"}
-                </strong>
-              </div>
+              <h2>{SLOTS.find((item) => item.key === selected)?.title}</h2>
 
-              <div>
-                <span>WEBSITE POSITION</span>
-                <strong>
-                  {selectedDefinition.label}
-                </strong>
-              </div>
-            </div>
-
-            {uploadedUrl && (
-              <div className="media-pending">
-                <div className="media-pending-image">
-                  <img
-                    src={uploadedUrl}
-                    alt="Uploaded preview"
-                  />
-                </div>
-
-                <div>
-                  <span>
-                    NEW IMAGE READY
-                  </span>
-
-                  <strong>
-                    {uploadedFilename ||
-                      selectedDefinition.label}
-                  </strong>
-
-                  <p>
-                    This image has been uploaded but
-                    has not replaced the current
-                    website image yet.
-                  </p>
-                </div>
-
-                <button
-                  className="media-assign-button"
-                  onClick={assignUploadedImage}
-                  disabled={assigning}
-                >
-                  {assigning ? (
-                    <Loader2
-                      className="spin"
-                      size={16}
-                    />
-                  ) : (
-                    <Check size={16} />
-                  )}
-
-                  {assigning
-                    ? "Assigning..."
-                    : `Assign to ${selectedDefinition.label}`}
-                </button>
-              </div>
-            )}
-
-            <div className="media-manager-actions">
-              <button
-                className="media-upload-main-button"
-                onClick={() =>
-                  setUploadModalOpen(true)
-                }
-              >
-                <Upload size={17} />
-                Upload new image
-              </button>
-
-              {selectedStatus === "assigned" && (
-                <button
-                  className="media-reset-button"
-                  onClick={resetToDefault}
-                >
-                  Restore default
-                </button>
+              {SLOTS.find((item) => item.key === selected)?.label && (
+                <p>{SLOTS.find((item) => item.key === selected)?.label}</p>
               )}
+
+              {pending[selected] && (
+                <div className="pending-note">
+                  New image uploaded — <strong>not assigned yet.</strong>
+                </div>
+              )}
+
+              <div className="media-actions">
+                <button
+                  type="button"
+                  className="media-upload-button"
+                  onClick={() => openUpload(selected)}
+                >
+                  <Upload size={17} />
+                  Upload New
+                </button>
+
+                {pending[selected] && (
+                  <button
+                    type="button"
+                    className="media-save-button"
+                    onClick={() => assign(selected)}
+                    disabled={saving}
+                  >
+                    <Save size={17} />
+                    {saving ? "Saving…" : "Save Assignment"}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="media-restore-button"
+                  onClick={() => restoreDefault(selected)}
+                  disabled={saving}
+                >
+                  <RotateCcw size={16} />
+                  Restore Default
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="media-page-preview">
+            <div className="media-page-preview-heading">
+              <span>LANDING PAGE MAP</span>
+              <p>Visual overview of where each image appears.</p>
             </div>
 
-            <div className="media-help">
-              <strong>
-                How image assignment works
-              </strong>
+            <div className="visual-map">
+              {SLOTS.filter((slot) => slot.section !== "BRAND").map((slot) => {
+                const image =
+                  pending[slot.key] || String(content[slot.key] || "");
 
-              <p>
-                Select a website position from the
-                dropdown. Upload a new image, review
-                the preview, then press Assign. The
-                website will only change after you
-                press Assign.
-              </p>
+                return (
+                  <button
+                    type="button"
+                    key={slot.key}
+                    className={`visual-map-card ${
+                      selected === slot.key ? "selected" : ""
+                    }`}
+                    onClick={() => setSelected(slot.key)}
+                  >
+                    <div className="visual-map-image">
+                      {image ? (
+                        <img src={image} alt={slot.title} />
+                      ) : (
+                        <ImageIcon size={28} />
+                      )}
+                    </div>
+
+                    <div className="visual-map-caption">
+                      <span>{slot.section}</span>
+                      <strong>{slot.title}</strong>
+                      {slot.label && <small>{slot.label}</small>}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
-
-        {uploadModalOpen && (
-          <div
-            className="media-overlay"
-            onClick={() =>
-              !uploading &&
-              setUploadModalOpen(false)
-            }
-          >
-            <div
-              className="media-upload-modal"
-              onClick={(event) =>
-                event.stopPropagation()
-              }
-            >
-              <button
-                className="modal-close"
-                onClick={() =>
-                  !uploading &&
-                  setUploadModalOpen(false)
-                }
-              >
-                <X size={20} />
-              </button>
-
-              <div className="upload-modal-icon">
-                <Upload size={25} />
-              </div>
-
-              <span className="modal-eyebrow">
-                UPLOAD IMAGE
-              </span>
-
-              <h2>
-                {selectedDefinition.label}
-              </h2>
-
-              <p>
-                You are uploading an image for this
-                exact website position. After upload,
-                you must press Assign before it
-                replaces the current image.
-              </p>
-
-              <div className="upload-target">
-                <span>SELECTED POSITION</span>
-                <strong>
-                  {selectedDefinition.label}
-                </strong>
-              </div>
-
-              <button
-                className="save-assignment upload-now-button"
-                onClick={openUploader}
-                disabled={uploading}
-              >
-                {uploading ? (
-                  <>
-                    <Loader2
-                      className="spin"
-                      size={17}
-                    />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload size={17} />
-                    Choose image
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-      </main>
-    </>
+      </div>
+    </main>
   );
 }
