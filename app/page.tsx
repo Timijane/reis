@@ -196,7 +196,7 @@ export default function Home() {
         <div className="editorial-gallery">
           <div
             className="gallery-tall gallery-image g1"
-            style={{ backgroundImage: `url("${content.gallery1Image}")` }}
+            style={{ backgroundImage: `url("${content.heroImage}")` }}
           />
           <div
             className="gallery-image g2"

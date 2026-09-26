@@ -5,12 +5,27 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import { ArrowLeft, Mail } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/lib/firebase";
+import {
+  defaultHomepageContent,
+  getHomepageContent,
+  type HomepageContent,
+} from "@/lib/cms/homepage";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [content, setContent] =
+    useState<HomepageContent>(defaultHomepageContent);
+
+  useState(() => {
+    getHomepageContent()
+      .then(setContent)
+      .catch((error) =>
+        console.error("Failed to load forgot-password CMS content:", error)
+      );
+  });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -63,10 +78,20 @@ export default function ForgotPasswordPage() {
         <div className="admin-auth-overlay" />
 
         <div className="admin-auth-visual-content">
-          <div className="admin-auth-mark">REIS</div>
+          <div className="admin-auth-mark">
+            {content.logoUrl ? (
+              <img
+                src={content.logoUrl}
+                alt={content.brandName}
+                className="admin-auth-logo"
+              />
+            ) : (
+              "REIS"
+            )}
+          </div>
 
           <div className="admin-auth-visual-copy">
-            <p className="admin-auth-eyebrow">REIS EVENT SERVICES</p>
+            <p className="admin-auth-eyebrow">{content.brandName} {content.brandSubtext}</p>
 
             <h1>
               We style your event,
@@ -91,11 +116,19 @@ export default function ForgotPasswordPage() {
       <section className="admin-auth-panel">
         <div className="admin-auth-form-wrap">
           <div className="admin-auth-brand">
-            <span className="admin-auth-brand-symbol">R</span>
+            {content.logoUrl ? (
+                              <img
+                                src={content.logoUrl}
+                                alt={content.brandName}
+                                className="admin-auth-panel-logo"
+                              />
+                            ) : (
+                              <span className="admin-auth-brand-symbol">R</span>
+                            )}
 
             <div>
-              <strong>REIS</strong>
-              <small>EVENT SERVICES</small>
+              <strong>{content.brandName}</strong>
+              <small>{content.brandSubtext}</small>
             </div>
           </div>
 

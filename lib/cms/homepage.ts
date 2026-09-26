@@ -8,6 +8,7 @@ import { db } from "@/lib/firebase";
 
 export interface HomepageContent {
   logoUrl: string;
+  heroImage: string;
 
   brandName: string;
   brandSubtext: string;
@@ -90,6 +91,8 @@ export interface HomepageContent {
 
 export const defaultHomepageContent: HomepageContent = {
   logoUrl: "",
+  heroImage:
+    "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1800&q=90",
 
   brandName: "REIS EVENT",
   brandSubtext: "SERVICES",

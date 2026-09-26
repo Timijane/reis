@@ -216,7 +216,15 @@ export default function AdminLoginPage() {
       <section className="admin-auth-panel">
         <div className="admin-auth-form-wrap">
           <div className="admin-auth-brand">
-            <span className="admin-auth-brand-symbol">R</span>
+            {content.logoUrl ? (
+                                <img
+                                    src={content.logoUrl}
+                                    alt={content.brandName}
+                                    className="admin-auth-panel-logo"
+                                />
+                            ) : (
+                                <span className="admin-auth-brand-symbol">R</span>
+                            )}
             <div>
               <strong>{content.brandName}</strong>
               <small>{content.brandSubtext}</small>

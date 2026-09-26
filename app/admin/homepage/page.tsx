@@ -150,6 +150,7 @@ export default function HomepageAdmin() {
 
         <div className="cms-grid">
           <Field label="Logo image URL" value={content.logoUrl} onChange={(v) => update("logoUrl", v)} />
+          <Field label="Hero image URL" value={content.heroImage} onChange={(v) => update("heroImage", v)} />
           <Field label="Brand name" value={content.brandName} onChange={(v) => update("brandName", v)} />
           <Field label="Brand subtext" value={content.brandSubtext} onChange={(v) => update("brandSubtext", v)} />
           <Field label="Announcement" value={content.announcement} onChange={(v) => update("announcement", v)} multiline />
