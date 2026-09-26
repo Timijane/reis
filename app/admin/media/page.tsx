@@ -20,7 +20,9 @@ import {
   type MediaAsset,
 } from "@/lib/cms/media";
 import {
+  defaultHomepageContent,
   getHomepageContent,
+  saveHomepageContent,
   type HomepageContent,
 } from "@/lib/cms/homepage";
 import { watchAdminAuth, type AdminUser } from "@/lib/admin/auth";
@@ -61,6 +63,13 @@ const ASSIGNMENT_SLOTS = [
 
 type AssignmentSlot = (typeof ASSIGNMENT_SLOTS)[number]["id"];
 
+const GLOBAL_LOGO_LOCATIONS = [
+  "Landing Page — Header Logo",
+  "Landing Page — Footer Logo",
+  "Admin Login — Logo",
+  "Admin Forgot Password — Logo",
+];
+
 function getAssignments(
   asset: MediaAsset,
   homepage: HomepageContent | null
@@ -69,19 +78,12 @@ function getAssignments(
 
   const assignments: string[] = [];
 
-  const globalLogoLocations = [
-    "Landing Page — Header Logo",
-    "Landing Page — Footer Logo",
-    "Admin Login — Logo",
-    "Admin Forgot Password — Logo",
-  ];
-
   for (const slot of ASSIGNMENT_SLOTS) {
     const value = homepage[slot.id as keyof HomepageContent];
 
-    if (typeof value === "string" && value === asset.secureUrl) {
+    if (typeof value === "string" && value.trim() === asset.secureUrl) {
       if (slot.id === "logoUrl") {
-        assignments.push(...globalLogoLocations);
+        assignments.push(...GLOBAL_LOGO_LOCATIONS);
       } else {
         assignments.push(slot.label);
       }
@@ -91,23 +93,85 @@ function getAssignments(
   return [...new Set(assignments)];
 }
 
+function homepageImagesToAssets(
+  homepage: HomepageContent
+): MediaAsset[] {
+  const slots = ASSIGNMENT_SLOTS.filter(
+    (slot) => slot.id !== "logoUrl"
+  );
+
+  const assets: MediaAsset[] = [];
+
+  for (const slot of slots) {
+    const value = homepage[slot.id as keyof HomepageContent];
+
+    if (typeof value !== "string" || !value.trim()) continue;
+
+    assets.push({
+      id: `homepage-${slot.id}`,
+      publicId: "",
+      secureUrl: value,
+      originalFilename: slot.label.replace("Landing Page — ", ""),
+      format: "",
+      resourceType: "image",
+    });
+  }
+
+  if (homepage.logoUrl?.trim()) {
+    assets.push({
+      id: "homepage-global-logo",
+      publicId: "",
+      secureUrl: homepage.logoUrl,
+      originalFilename: "Global Logo",
+      format: "",
+      resourceType: "image",
+    });
+  }
+
+  return assets;
+}
+
+function mergeAssets(
+  storedAssets: MediaAsset[],
+  homepage: HomepageContent
+): MediaAsset[] {
+  const result = [...storedAssets];
+  const existingUrls = new Set(result.map((asset) => asset.secureUrl));
+
+  for (const asset of homepageImagesToAssets(homepage)) {
+    if (!existingUrls.has(asset.secureUrl)) {
+      result.push(asset);
+      existingUrls.add(asset.secureUrl);
+    }
+  }
+
+  return result;
+}
+
 export default function MediaPage() {
   const router = useRouter();
 
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [assets, setAssets] = useState<MediaAsset[]>([]);
-  const [homepage, setHomepage] = useState<HomepageContent | null>(null);
+  const [homepage, setHomepage] =
+    useState<HomepageContent>(defaultHomepageContent);
 
   const [preview, setPreview] = useState<MediaAsset | null>(null);
   const [assigning, setAssigning] = useState<MediaAsset | null>(null);
-  const [assignedView, setAssignedView] = useState<MediaAsset | null>(null);
+  const [assignedView, setAssignedView] =
+    useState<MediaAsset | null>(null);
 
   const [assignmentSlot, setAssignmentSlot] =
     useState<AssignmentSlot>("heroImage");
+
   const [url, setUrl] = useState("");
   const [savingAssignment, setSavingAssignment] = useState(false);
+
   const [uploading, setUploading] = useState(false);
+  const [uploadTarget, setUploadTarget] =
+    useState<AssignmentSlot | "none">("none");
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   async function loadData() {
     try {
@@ -116,32 +180,37 @@ export default function MediaPage() {
         getHomepageContent(),
       ]);
 
-      setAssets(media);
       setHomepage(content);
+      setAssets(mergeAssets(media, content));
     } catch (error) {
       console.error("Failed to load media:", error);
     }
   }
 
   useEffect(() => {
-    const unsubscribe = watchAdminAuth((_, currentAdmin, authLoading) => {
-      if (authLoading) return;
+    const unsubscribe = watchAdminAuth(
+      (_, currentAdmin, authLoading) => {
+        if (authLoading) return;
 
-      if (!currentAdmin) {
-        router.replace("/admin/login");
-        return;
+        if (!currentAdmin) {
+          router.replace("/admin/login");
+          return;
+        }
+
+        setAdmin(currentAdmin);
+        setLoading(false);
+        loadData();
       }
-
-      setAdmin(currentAdmin);
-      setLoading(false);
-      loadData();
-    });
+    );
 
     return unsubscribe;
   }, [router]);
 
   function openUploader() {
-    if (!window.cloudinary || !admin) return;
+    if (!window.cloudinary || !admin) {
+      alert("Media uploader is still loading. Please try again.");
+      return;
+    }
 
     setUploading(true);
 
@@ -149,9 +218,14 @@ export default function MediaPage() {
       {
         cloudName: CLOUD_NAME,
         uploadPreset: UPLOAD_PRESET,
-        multiple: true,
+        multiple: false,
         maxFileSize: 10000000,
-        clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+        clientAllowedFormats: [
+          "jpg",
+          "jpeg",
+          "png",
+          "webp",
+        ],
         sources: ["local", "camera"],
         folder: "reis-event-services",
       },
@@ -168,7 +242,10 @@ export default function MediaPage() {
           const asset: MediaAsset = {
             id:
               info.asset_id ||
-              info.public_id.replace(/[^a-zA-Z0-9_-]/g, "_"),
+              info.public_id.replace(
+                /[^a-zA-Z0-9_-]/g,
+                "_"
+              ),
             publicId: info.public_id,
             secureUrl: info.secure_url,
             originalFilename:
@@ -177,14 +254,54 @@ export default function MediaPage() {
             width: info.width,
             height: info.height,
             bytes: info.bytes,
-            resourceType: info.resource_type || "image",
+            resourceType:
+              info.resource_type || "image",
           };
 
           try {
             await saveMediaAsset(asset, admin.uid);
-            await loadData();
+
+            let updatedHomepage = homepage;
+
+            if (uploadTarget !== "none") {
+              updatedHomepage = {
+                ...homepage,
+                [uploadTarget]: asset.secureUrl,
+              };
+
+              await saveHomepageContent(updatedHomepage);
+              setHomepage(updatedHomepage);
+            }
+
+            setAssets((current) => {
+              const withoutDuplicate = current.filter(
+                (item) => item.secureUrl !== asset.secureUrl
+              );
+
+              return [asset, ...withoutDuplicate];
+            });
+
+            setUploadModalOpen(false);
+
+            if (uploadTarget !== "none") {
+              const selected = ASSIGNMENT_SLOTS.find(
+                (slot) => slot.id === uploadTarget
+              );
+
+              alert(
+                `Image uploaded and assigned to ${
+                  selected?.label || "the selected location"
+                }.`
+              );
+            }
           } catch (saveError) {
-            console.error("Could not save media record:", saveError);
+            console.error(
+              "Could not save media record:",
+              saveError
+            );
+            alert(
+              "The image uploaded, but the website assignment could not be saved."
+            );
           }
         }
 
@@ -206,7 +323,8 @@ export default function MediaPage() {
   async function assignImage() {
     if (!assigning) return;
 
-    const imageUrl = url.trim() || assigning.secureUrl;
+    const imageUrl =
+      url.trim() || assigning.secureUrl;
 
     if (!imageUrl) {
       alert("Please provide an image URL.");
@@ -216,25 +334,28 @@ export default function MediaPage() {
     setSavingAssignment(true);
 
     try {
-      const current = await getHomepageContent();
-
       const updated = {
-        ...current,
+        ...homepage,
         [assignmentSlot]: imageUrl,
       };
-
-      const { saveHomepageContent } = await import("@/lib/cms/homepage");
 
       await saveHomepageContent(updated);
 
       setHomepage(updated);
+
+      setAssets((current) =>
+        mergeAssets(current, updated)
+      );
+
       setAssigning(null);
       setUrl("");
 
+      const selected = ASSIGNMENT_SLOTS.find(
+        (slot) => slot.id === assignmentSlot
+      );
+
       alert(
-        `${ASSIGNMENT_SLOTS.find(
-          (slot) => slot.id === assignmentSlot
-        )?.label} assigned successfully.`
+        `${selected?.label || "Website location"} assigned successfully.`
       );
     } catch (error) {
       console.error("Assignment failed:", error);
@@ -245,6 +366,13 @@ export default function MediaPage() {
   }
 
   async function removeAsset(asset: MediaAsset) {
+    if (asset.id.startsWith("homepage-")) {
+      alert(
+        "This image belongs to the current website content. Change its website assignment instead of removing it from the library."
+      );
+      return;
+    }
+
     const confirmed = window.confirm(
       "Remove this image from the REIS Media Library?"
     );
@@ -253,9 +381,11 @@ export default function MediaPage() {
 
     try {
       await deleteMediaAsset(asset.id);
+
       setAssets((current) =>
         current.filter((item) => item.id !== asset.id)
       );
+
       setPreview(null);
       setAssignedView(null);
     } catch (error) {
@@ -298,40 +428,53 @@ export default function MediaPage() {
             <h1>Media Library</h1>
 
             <p>
-              Upload, assign and manage every image used across REIS.
+              Manage every image used across the REIS website.
             </p>
           </div>
 
           <button
             className="upload-button"
-            onClick={openUploader}
+            onClick={() => {
+              setUploadTarget("none");
+              setUploadModalOpen(true);
+            }}
             disabled={uploading}
           >
-            {uploading ? (
-              <Loader2 className="spin" size={18} />
-            ) : (
-              <ImagePlus size={18} />
-            )}
-            {uploading ? "Uploading..." : "Upload media"}
+            <ImagePlus size={18} />
+            Upload media
           </button>
         </header>
 
         {assets.length === 0 ? (
           <section className="empty-media">
             <ImagePlus size={36} strokeWidth={1.2} />
+
             <h2>Your media library is empty.</h2>
+
             <p>Upload your first REIS image.</p>
-            <button onClick={openUploader}>
+
+            <button
+              onClick={() => {
+                setUploadTarget("none");
+                setUploadModalOpen(true);
+              }}
+            >
               Upload first image
             </button>
           </section>
         ) : (
           <section className="media-grid">
             {assets.map((asset) => {
-              const assignments = getAssignments(asset, homepage);
+              const assignments = getAssignments(
+                asset,
+                homepage
+              );
 
               return (
-                <article className="media-card" key={asset.id}>
+                <article
+                  className="media-card"
+                  key={asset.id}
+                >
                   <div className="media-image">
                     <img
                       src={asset.secureUrl}
@@ -340,25 +483,33 @@ export default function MediaPage() {
                   </div>
 
                   <div className="media-card-info">
-                    <strong>{asset.originalFilename}</strong>
+                    <strong>
+                      {asset.originalFilename}
+                    </strong>
 
                     <span>
                       {asset.width && asset.height
                         ? `${asset.width} × ${asset.height}`
-                        : asset.format.toUpperCase()}
+                        : asset.format
+                          ? asset.format.toUpperCase()
+                          : "WEBSITE IMAGE"}
                     </span>
 
                     <div className="media-card-actions">
                       <button
                         className="media-action"
-                        onClick={() => setPreview(asset)}
+                        onClick={() =>
+                          setPreview(asset)
+                        }
                       >
                         Preview
                       </button>
 
                       <button
                         className="media-action primary"
-                        onClick={() => openAssign(asset)}
+                        onClick={() =>
+                          openAssign(asset)
+                        }
                       >
                         <Plus size={14} />
                         Assign
@@ -370,12 +521,16 @@ export default function MediaPage() {
                             ? "media-action assigned active"
                             : "media-action assigned"
                         }
-                        onClick={() => setAssignedView(asset)}
+                        onClick={() =>
+                          setAssignedView(asset)
+                        }
                       >
                         <Check size={14} />
                         Assigned
                         {assignments.length > 0 && (
-                          <small>{assignments.length}</small>
+                          <small>
+                            {assignments.length}
+                          </small>
                         )}
                       </button>
                     </div>
@@ -386,6 +541,99 @@ export default function MediaPage() {
           </section>
         )}
 
+        {uploadModalOpen && (
+          <div
+            className="media-overlay"
+            onClick={() =>
+              !uploading &&
+              setUploadModalOpen(false)
+            }
+          >
+            <div
+              className="media-upload-modal"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+            >
+              <button
+                className="modal-close"
+                onClick={() =>
+                  !uploading &&
+                  setUploadModalOpen(false)
+                }
+                disabled={uploading}
+              >
+                <X size={20} />
+              </button>
+
+              <div className="upload-modal-icon">
+                <ImagePlus size={28} />
+              </div>
+
+              <span className="modal-eyebrow">
+                ADD TO MEDIA LIBRARY
+              </span>
+
+              <h2>Upload an image</h2>
+
+              <p>
+                Choose where the uploaded image should
+                be used. Leave it as Media Library only
+                if you do not want to assign it yet.
+              </p>
+
+              <label>
+                Assign uploaded image to
+                <select
+                  value={uploadTarget}
+                  onChange={(event) =>
+                    setUploadTarget(
+                      event.target.value as
+                        | AssignmentSlot
+                        | "none"
+                    )
+                  }
+                  disabled={uploading}
+                >
+                  <option value="none">
+                    Media Library only
+                  </option>
+
+                  {ASSIGNMENT_SLOTS.map((slot) => (
+                    <option
+                      value={slot.id}
+                      key={slot.id}
+                    >
+                      {slot.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                className="save-assignment upload-now-button"
+                onClick={openUploader}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <>
+                    <Loader2
+                      className="spin"
+                      size={17}
+                    />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus size={17} />
+                    Choose image
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
         {preview && (
           <div
             className="media-overlay"
@@ -393,7 +641,9 @@ export default function MediaPage() {
           >
             <div
               className="media-modal"
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event) =>
+                event.stopPropagation()
+              }
             >
               <button
                 className="modal-close"
@@ -409,10 +659,14 @@ export default function MediaPage() {
 
               <div className="modal-details">
                 <span>MEDIA ASSET</span>
-                <h2>{preview.originalFilename}</h2>
+
+                <h2>
+                  {preview.originalFilename}
+                </h2>
 
                 <p>
-                  {preview.width && preview.height
+                  {preview.width &&
+                  preview.height
                     ? `${preview.width} × ${preview.height}`
                     : ""}
                   {preview.format
@@ -422,7 +676,9 @@ export default function MediaPage() {
 
                 <button
                   className="delete-button"
-                  onClick={() => removeAsset(preview)}
+                  onClick={() =>
+                    removeAsset(preview)
+                  }
                 >
                   <Trash2 size={16} />
                   Remove from library
@@ -435,47 +691,66 @@ export default function MediaPage() {
         {assignedView && (
           <div
             className="media-overlay"
-            onClick={() => setAssignedView(null)}
+            onClick={() =>
+              setAssignedView(null)
+            }
           >
             <div
               className="media-assigned-modal"
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event) =>
+                event.stopPropagation()
+              }
             >
               <button
                 className="modal-close"
-                onClick={() => setAssignedView(null)}
+                onClick={() =>
+                  setAssignedView(null)
+                }
               >
                 <X size={20} />
               </button>
 
               <div className="assigned-modal-heading">
                 <Check size={20} />
+
                 <div>
-                  <span>IMAGE ASSIGNMENTS</span>
-                  <h2>{assignedView.originalFilename}</h2>
+                  <span>
+                    IMAGE ASSIGNMENTS
+                  </span>
+
+                  <h2>
+                    {assignedView.originalFilename}
+                  </h2>
                 </div>
               </div>
 
-              {getAssignments(assignedView, homepage).length > 0 ? (
+              {getAssignments(
+                assignedView,
+                homepage
+              ).length > 0 ? (
                 <div className="assignment-list">
-                  {getAssignments(assignedView, homepage).map(
-                    (location) => (
-                      <div
-                        className="assignment-row"
-                        key={location}
-                      >
-                        <Check size={16} />
-                        <span>{location}</span>
-                      </div>
-                    )
-                  )}
+                  {getAssignments(
+                    assignedView,
+                    homepage
+                  ).map((location) => (
+                    <div
+                      className="assignment-row"
+                      key={location}
+                    >
+                      <Check size={16} />
+                      <span>{location}</span>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="no-assignments">
-                  <span>NOT ASSIGNED</span>
+                  <span>
+                    NOT ASSIGNED
+                  </span>
+
                   <p>
-                    This image is currently not assigned to a
-                    website location.
+                    This image is currently only
+                    stored in the Media Library.
                   </p>
                 </div>
               )}
@@ -490,11 +765,15 @@ export default function MediaPage() {
           >
             <div
               className="media-assignment-modal"
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event) =>
+                event.stopPropagation()
+              }
             >
               <button
                 className="modal-close"
-                onClick={() => setAssigning(null)}
+                onClick={() =>
+                  setAssigning(null)
+                }
               >
                 <X size={20} />
               </button>
@@ -511,12 +790,17 @@ export default function MediaPage() {
                   ASSIGN MEDIA
                 </span>
 
-                <h2>Where should this image appear?</h2>
+                <h2>
+                  Where should this image appear?
+                </h2>
 
-                <p>{assigning.originalFilename}</p>
+                <p>
+                  {assigning.originalFilename}
+                </p>
 
                 <label>
                   Website location
+
                   <select
                     value={assignmentSlot}
                     onChange={(event) =>
@@ -525,22 +809,31 @@ export default function MediaPage() {
                       )
                     }
                   >
-                    {ASSIGNMENT_SLOTS.map((slot) => (
-                      <option value={slot.id} key={slot.id}>
-                        {slot.label}
-                      </option>
-                    ))}
+                    {ASSIGNMENT_SLOTS.map(
+                      (slot) => (
+                        <option
+                          value={slot.id}
+                          key={slot.id}
+                        >
+                          {slot.label}
+                        </option>
+                      )
+                    )}
                   </select>
                 </label>
 
                 <label>
                   Image URL
+
                   <div className="url-input">
                     <Link2 size={16} />
+
                     <input
                       value={url}
                       onChange={(event) =>
-                        setUrl(event.target.value)
+                        setUrl(
+                          event.target.value
+                        )
                       }
                       placeholder="https://..."
                     />
@@ -548,20 +841,27 @@ export default function MediaPage() {
                 </label>
 
                 <p className="assignment-note">
-                  You can use the uploaded Media Library image or
-                  replace it with any valid image URL.
+                  The selected Media Library image
+                  is used by default. You may also
+                  enter another valid image URL.
                 </p>
 
                 <button
                   className="save-assignment"
                   onClick={assignImage}
-                  disabled={savingAssignment}
+                  disabled={
+                    savingAssignment
+                  }
                 >
                   {savingAssignment ? (
-                    <Loader2 className="spin" size={17} />
+                    <Loader2
+                      className="spin"
+                      size={17}
+                    />
                   ) : (
                     <Check size={17} />
                   )}
+
                   {savingAssignment
                     ? "Assigning..."
                     : "Assign image"}
