@@ -6,6 +6,13 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
+export interface NavItem {
+  id: string;
+  label: string;
+  href: string;
+  visible: boolean;
+}
+
 export interface HomepageContent {
   logoUrl: string;
   heroImage: string;
@@ -14,12 +21,7 @@ export interface HomepageContent {
   brandSubtext: string;
   announcement: string;
 
-  navHome: string;
-  navRentals: string;
-  navServices: string;
-  navWork: string;
-  navAbout: string;
-  navCta: string;
+  navItems: NavItem[];
 
   heroEyebrow: string;
   heroTitle: string;
@@ -99,12 +101,44 @@ export const defaultHomepageContent: HomepageContent = {
   announcement:
     "Event rentals & styling across the UK ✦ We style your event, You create memories!",
 
-  navHome: "Home",
-  navRentals: "Rentals",
-  navServices: "Services",
-  navWork: "Our Work",
-  navAbout: "About",
-  navCta: "Talk to us",
+  navItems: [
+    {
+      id: "home",
+      label: "Home",
+      href: "#home",
+      visible: true,
+    },
+    {
+      id: "rentals",
+      label: "Rentals",
+      href: "#rentals",
+      visible: true,
+    },
+    {
+      id: "services",
+      label: "Services",
+      href: "#services",
+      visible: true,
+    },
+    {
+      id: "work",
+      label: "Our Work",
+      href: "#work",
+      visible: true,
+    },
+    {
+      id: "about",
+      label: "About",
+      href: "#about",
+      visible: true,
+    },
+    {
+      id: "contact",
+      label: "Talk to us",
+      href: "#contact",
+      visible: true,
+    },
+  ],
 
   heroEyebrow: "EVENT RENTALS · STYLING · DETAILS",
   heroTitle: "We style your event. You create memories.",
@@ -205,9 +239,15 @@ export async function getHomepageContent(): Promise<HomepageContent> {
     return defaultHomepageContent;
   }
 
+  const data = snapshot.data() as Partial<HomepageContent>;
+
   return {
     ...defaultHomepageContent,
-    ...(snapshot.data() as Partial<HomepageContent>),
+    ...data,
+    navItems:
+      Array.isArray(data.navItems) && data.navItems.length > 0
+        ? data.navItems
+        : defaultHomepageContent.navItems,
   };
 }
 

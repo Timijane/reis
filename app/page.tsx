@@ -69,25 +69,23 @@ export default function Home() {
         </button>
 
         <nav className={menuOpen ? "nav open" : "nav"}>
-          <a href="#home" onClick={() => setMenuOpen(false)}>
-            {content.navHome}
-          </a>
-          <a href="#rentals" onClick={() => setMenuOpen(false)}>
-            {content.navRentals}
-          </a>
-          <a href="#services" onClick={() => setMenuOpen(false)}>
-            {content.navServices}
-          </a>
-          <a href="#work" onClick={() => setMenuOpen(false)}>
-            {content.navWork}
-          </a>
-          <a href="#about" onClick={() => setMenuOpen(false)}>
-            {content.navAbout}
-          </a>
-          <a className="nav-cta" href="#contact" onClick={() => setMenuOpen(false)}>
-            {content.navCta}
-          </a>
-        </nav>
+              {content.navItems
+                .filter((item) => item.visible)
+                .map((item, index, visibleItems) => (
+                  <a
+                    key={item.id}
+                    className={
+                      index === visibleItems.length - 1
+                        ? "nav-cta"
+                        : undefined
+                    }
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+            </nav>
       </header>
 
       <section id="home" className="hero">
