@@ -41,6 +41,11 @@ service cloud.firestore {
       allow write: if isAuthorizedAdmin();
     }
 
+    match /siteContent/settings {
+      allow read: if true;
+      allow write: if isAuthorizedAdmin();
+    }
+
     match /media/{mediaId} {
       allow read, create, update, delete: if isAuthorizedAdmin();
     }
