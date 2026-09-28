@@ -45,7 +45,6 @@ const navigation = [
   },
   {
     label: "Brand",
-    href: "/admin/brand",
     icon: Sparkles,
   },
   {
@@ -70,7 +69,6 @@ const navigation = [
   },
   {
     label: "Settings",
-    href: "/admin/settings",
     icon: Settings,
   },
 ];
