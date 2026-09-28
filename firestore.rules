@@ -26,6 +26,11 @@ service cloud.firestore {
         );
     }
 
+    /*
+     * ADMIN USERS
+     * Admins can read authorized admin records.
+     * Creation, update and deletion are server-controlled.
+     */
     match /adminUsers/{uid} {
       allow read: if isAuthenticated()
         && (
@@ -36,16 +41,66 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    /*
+     * HOMEPAGE CMS
+     * Public can read homepage content.
+     * Only authorized admins can modify it.
+     */
     match /siteContent/homepage {
       allow read: if true;
       allow write: if isAuthorizedAdmin();
     }
 
-      allow write: if isAuthorizedAdmin();
-    }
-
+    /*
+     * MEDIA
+     * Media records are managed by authorized admins.
+     * Public access is not granted directly from Firestore.
+     */
     match /media/{mediaId} {
       allow read, create, update, delete: if isAuthorizedAdmin();
+    }
+
+    /*
+     * CATEGORIES
+     * Public can read active categories.
+     * Authorized admins can fully manage categories.
+     */
+    match /categories/{categoryId} {
+      allow read: if resource.data.active == true
+        || isAuthorizedAdmin();
+
+      allow create, update, delete: if isAuthorizedAdmin();
+    }
+
+    /*
+     * PRODUCTS / RENTALS
+     * Public catalogue can read active products only.
+     * Authorized admins can fully manage products.
+     */
+    match /products/{productId} {
+      allow read: if resource.data.active == true
+        || isAuthorizedAdmin();
+
+      allow create, update, delete: if isAuthorizedAdmin();
+    }
+
+    /*
+     * BOOKINGS
+     *
+     * Booking creation and management are handled by
+     * server-side API routes using Firebase Admin SDK.
+     *
+     * No direct client Firestore access is allowed.
+     */
+    match /bookings/{bookingId} {
+      allow read, create, update, delete: if false;
+    }
+
+    /*
+     * DENY EVERYTHING ELSE
+     */
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
