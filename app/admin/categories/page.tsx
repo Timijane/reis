@@ -174,9 +174,13 @@ export default function CategoriesPage() {
       setForm(emptyCategory);
     } catch (error) {
       console.error("Category save failed:", error);
-      setMessage(
-        "Could not save the category. Check your admin access and internet connection, then try again."
-      );
+
+      const details =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      setMessage(`Could not save category: ${details}`);
     } finally {
       setSaving(false);
     }
