@@ -325,9 +325,8 @@ export default function CategoriesPage() {
       );
     } catch (error) {
       console.error("Default category creation failed:", error);
-      setMessage(
-        "Could not add the default categories. Check your admin access and try again."
-      );
+      const details = error instanceof Error ? error.message : String(error);
+      setMessage(`Could not add default categories: ${details}`);
     } finally {
       setSaving(false);
     }
