@@ -1186,3 +1186,25 @@ img { display: block; width: 100%; }
   flex: 0 0 42px;
   overflow: hidden;
 }
+
+/* REIS public rental catalogue cards */
+.reis-product-card{overflow:hidden;background:#fff;border:1px solid #e6e1d8;min-width:0;display:flex;flex-direction:column}
+.reis-product-photo{position:relative;display:grid;place-items:center;aspect-ratio:4/3;background:#f0ede6;overflow:hidden}
+.reis-product-photo img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
+.reis-product-card:hover .reis-product-photo img{transform:scale(1.035)}
+.reis-product-no-image{font-family:var(--serif);font-size:18px;letter-spacing:.15em;color:#858476}
+.reis-product-featured{position:absolute;top:13px;left:13px;background:#faf9f6;padding:7px 10px;font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+.reis-product-body{padding:20px;display:flex;flex-direction:column;flex:1}
+.reis-product-body .eyebrow{margin-bottom:9px}
+.reis-product-body h2{font:500 28px/1.05 var(--serif);margin:0 0 12px}
+.reis-product-body h2 a:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+.reis-product-description{font-size:12px;line-height:1.75;color:var(--muted);margin:0 0 22px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.reis-product-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:auto;padding-top:15px;border-top:1px solid var(--line)}
+.reis-product-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 8px}
+.reis-product-price strong{font-size:16px;font-weight:600}
+.reis-product-price small{font-size:10px;color:var(--muted)}
+.reis-product-price del{font-size:10px;color:var(--muted)}
+.reis-product-link{font-size:9px;text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;border-bottom:1px solid #a8a79b;padding-bottom:5px}
+.reis-product-link span{margin-left:5px}
+@media(max-width:520px){.reis-product-body{padding:16px}.reis-product-body h2{font-size:25px}}
+@media(prefers-reduced-motion:reduce){.reis-product-photo img{transition:none}}

@@ -1,5 +1,7 @@
 "use client";
 
+import "./products.css";
+
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { getCategories, type RentalCategory } from "@/lib/cms/categories";
