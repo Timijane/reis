@@ -77,20 +77,10 @@ export default function CategoriesPage() {
   async function loadCategories() {
     try {
       const data = await getCategories();
-
-      if (data.length === 0) {
-        setCategories(
-          defaultCategories.map((category, index) => ({
-            ...category,
-            id: `default-${index}`,
-          }))
-        );
-      } else {
-        setCategories(data);
-      }
+      setCategories(data);
     } catch (error) {
-      console.error(error);
-      setMessage("Unable to load categories.");
+      console.error("Category loading failed:", error);
+      setMessage("Unable to load categories. Please refresh and try again.");
     } finally {
       setLoading(false);
     }
@@ -130,51 +120,51 @@ export default function CategoriesPage() {
   async function saveCategory(event: FormEvent) {
     event.preventDefault();
 
-    if (!form.name.trim()) {
+    const name = form.name.trim();
+
+    if (!name) {
       setMessage("Category name is required.");
       return;
     }
 
-    const slug = form.slug.trim() || slugify(form.name);
+    const slug = slugify(name);
 
-    if (!form.destination.trim()) {
-      setMessage("Destination is required.");
-      return;
-    }
+    const categoryData = {
+      ...form,
+      name,
+      slug,
+      description: form.description.trim(),
+      imageUrl: "",
+      destinationType: "category" as const,
+      destination: `/rentals?category=${slug}`,
+      homepageOrder: editing?.homepageOrder ?? 999,
+      featuredOnHomepage: editing?.featuredOnHomepage ?? false,
+    };
 
     setSaving(true);
     setMessage("");
 
     try {
       if (editing) {
-        await updateCategory(editing.id, {
-          ...form,
-          slug,
-        });
+        await updateCategory(editing.id, categoryData);
 
         setCategories((current) =>
           current.map((item) =>
             item.id === editing.id
-              ? { ...item, ...form, slug }
+              ? { ...item, ...categoryData }
               : item
           )
         );
 
         setMessage("Category updated successfully.");
       } else {
-        const created = await createCategory({
-          ...form,
-          slug,
-        });
+        const created = await createCategory(categoryData);
 
-        setCategories((current) => [
-          ...current,
-          {
-            ...form,
-            slug,
-            id: created.id,
-          },
-        ]);
+        setCategories((current) =>
+          [...current, { ...categoryData, id: created.id }].sort(
+            (a, b) => a.homepageOrder - b.homepageOrder
+          )
+        );
 
         setMessage("Category created successfully.");
       }
@@ -183,8 +173,10 @@ export default function CategoriesPage() {
       setEditing(null);
       setForm(emptyCategory);
     } catch (error) {
-      console.error(error);
-      setMessage("Unable to save category.");
+      console.error("Category save failed:", error);
+      setMessage(
+        "Could not save the category. Check your admin access and internet connection, then try again."
+      );
     } finally {
       setSaving(false);
     }
@@ -295,38 +287,43 @@ export default function CategoriesPage() {
 
   async function seedCategories() {
     const confirmed = window.confirm(
-      "Create the 30 default REIS categories? Existing categories will not be changed."
+      "Add the default REIS categories? Existing categories will be kept."
     );
-
     if (!confirmed) return;
 
     setSaving(true);
     setMessage("");
 
     try {
+      const existing = await getCategories();
       const existingNames = new Set(
-        categories.map((category) => category.name.toLowerCase())
+        existing.map((category) => category.name.trim().toLowerCase())
       );
 
       const missing = defaultCategories.filter(
-        (category) =>
-          !existingNames.has(category.name.toLowerCase())
+        (category) => !existingNames.has(category.name.trim().toLowerCase())
       );
 
-      const created = await Promise.all(
-        missing.map((category) => createCategory(category))
+      for (const category of missing) {
+        await createCategory({
+          ...category,
+          imageUrl: "",
+          destinationType: "category",
+          destination: `/rentals?category=${category.slug}`,
+        });
+      }
+
+      await loadCategories();
+      setMessage(
+        missing.length
+          ? `${missing.length} categories added successfully.`
+          : "All default categories already exist."
       );
-
-      const newCategories = missing.map((category, index) => ({
-        ...category,
-        id: created[index].id,
-      }));
-
-      setCategories((current) => [...current, ...newCategories]);
-      setMessage(`${newCategories.length} categories added.`);
     } catch (error) {
-      console.error(error);
-      setMessage("Unable to seed categories.");
+      console.error("Default category creation failed:", error);
+      setMessage(
+        "Could not add the default categories. Check your admin access and try again."
+      );
     } finally {
       setSaving(false);
     }
@@ -430,10 +427,12 @@ export default function CategoriesPage() {
           </div>
 
           <form onSubmit={saveCategory}>
-            <div className="category-form-grid">
-              <label>
-                <span>Name</span>
+            <div className="category-form-grid category-form-grid-simple">
+              <label className="full-width">
+                <span>Category name <b aria-hidden="true">*</b></span>
                 <input
+                  autoFocus
+                  required
                   value={form.name}
                   onChange={(event) => {
                     const name = event.target.value;
@@ -441,32 +440,20 @@ export default function CategoriesPage() {
                       ...current,
                       name,
                       slug:
-                        current.slug === slugify(current.name) ||
-                        !current.slug
+                        !current.slug ||
+                        current.slug === slugify(current.name)
                           ? slugify(name)
                           : current.slug,
                     }));
                   }}
-                  placeholder="e.g. Chiavari Chairs"
+                  placeholder="e.g. European Chairs"
+                  maxLength={80}
                 />
-              </label>
-
-              <label>
-                <span>Slug</span>
-                <input
-                  value={form.slug}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      slug: slugify(event.target.value),
-                    }))
-                  }
-                  placeholder="chiavari-chairs"
-                />
+                <small>Use a clear name customers will recognise.</small>
               </label>
 
               <label className="full-width">
-                <span>Description</span>
+                <span>Description <em>Optional</em></span>
                 <textarea
                   value={form.description}
                   onChange={(event) =>
@@ -475,80 +462,13 @@ export default function CategoriesPage() {
                       description: event.target.value,
                     }))
                   }
-                  placeholder="Short description for this category"
+                  placeholder="A short description of this category"
                   rows={3}
+                  maxLength={300}
                 />
               </label>
 
-              <label className="full-width">
-                <span>Category image URL</span>
-                <input
-                  value={form.imageUrl}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      imageUrl: event.target.value,
-                    }))
-                  }
-                  placeholder="Image URL"
-                />
-              </label>
-
-              <label>
-                <span>Destination type</span>
-                <select
-                  value={form.destinationType}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      destinationType:
-                        event.target.value as RentalCategory["destinationType"],
-                    }))
-                  }
-                >
-                  <option value="category">
-                    Rental category
-                  </option>
-                  <option value="rental">
-                    Specific rental
-                  </option>
-                  <option value="custom">
-                    Custom destination
-                  </option>
-                </select>
-              </label>
-
-              <label>
-                <span>Destination</span>
-                <input
-                  value={form.destination}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      destination: event.target.value,
-                    }))
-                  }
-                  placeholder="/rentals?category=chairs"
-                />
-              </label>
-
-              <label>
-                <span>Homepage order</span>
-                <input
-                  type="number"
-                  min="1"
-                  value={form.homepageOrder}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      homepageOrder:
-                        Number(event.target.value) || 999,
-                    }))
-                  }
-                />
-              </label>
-
-              <label className="checkbox-field">
+              <label className="category-active-field">
                 <input
                   type="checkbox"
                   checked={form.active}
@@ -559,25 +479,12 @@ export default function CategoriesPage() {
                     }))
                   }
                 />
-                <span>Category is active</span>
-              </label>
-
-              <label className="checkbox-field">
-                <input
-                  type="checkbox"
-                  checked={form.featuredOnHomepage}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      featuredOnHomepage:
-                        event.target.checked,
-                    }))
-                  }
-                />
-                <span>Show on homepage</span>
+                <span>
+                  <strong>Visible on website</strong>
+                  <small>Customers can browse this category when enabled.</small>
+                </span>
               </label>
             </div>
-
             <div className="category-form-actions">
               <button
                 type="button"
@@ -610,7 +517,24 @@ export default function CategoriesPage() {
           <span>{categories.length} categories</span>
         </div>
 
-        {categories.map((category, index) => (
+        {categories.length === 0 ? (
+          <div className="categories-empty-state">
+            <div className="categories-empty-mark">R</div>
+            <h3>Your categories will appear here</h3>
+            <p>
+              Create a category such as European Chairs, then add individual
+              rental products to it.
+            </p>
+            <button
+              className="categories-primary-button"
+              type="button"
+              onClick={openNewCategory}
+            >
+              <Plus size={17} />
+              Create your first category
+            </button>
+          </div>
+        ) : categories.map((category, index) => (
           <article
             className={`category-row ${
               !category.active ? "inactive" : ""
@@ -640,18 +564,6 @@ export default function CategoriesPage() {
                 </button>
               </div>
             </div>
-
-            <div className="category-image">
-              {category.imageUrl ? (
-                <img
-                  src={category.imageUrl}
-                  alt=""
-                />
-              ) : (
-                <span>REIS</span>
-              )}
-            </div>
-
             <div className="category-info">
               <div className="category-title-line">
                 <h3>{category.name}</h3>
@@ -673,8 +585,6 @@ export default function CategoriesPage() {
                 {category.description ||
                   "No category description yet."}
               </p>
-
-              <small>{category.destination}</small>
             </div>
 
             <div className="category-actions">
