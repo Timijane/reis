@@ -29,7 +29,12 @@ import {
 import { signOut, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { type AdminUser, watchAdminAuth } from "@/lib/admin/auth";
+import {
+  ResponsiveContainer, BarChart, Bar, AreaChart, Area,
+  PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
+} from "recharts";
 import "./dashboard.css";
+import "./dashboard-charts.css";
 
 type MonthStat = {
   key: string;
@@ -76,8 +81,11 @@ type DashboardData = {
 const navigation = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
   { label: "Bookings", href: "/admin/bookings", icon: CalendarDays },
-  { label: "Products & rentals", href: "/admin/products", icon: Package },
-  { label: "Categories", href: "/admin/categories", icon: Tag },
+  { label: "Manage Catalogue", icon: Package, children: [
+    { label: "Equipment Rentals", href: "/admin/products" },
+    { label: "Tents & Marquees", href: "/admin/products?type=tent" },
+    { label: "Styling Portfolio", href: "/admin/homepage#styling" },
+  ]},
   { label: "Homepage", href: "/admin/homepage", icon: Home },
   { label: "Media library", href: "/admin/media", icon: FileImage },
 ];
@@ -174,6 +182,7 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState("");
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [catalogueOpen, setCatalogueOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
   const loadDashboard = useCallback(async (currentUser: User) => {
@@ -311,6 +320,37 @@ export default function AdminDashboardPage() {
 
         <nav className="overview-navigation" aria-label="Admin navigation">
           {navigation.map((item) => {
+            if ("children" in item && item.children) {
+              const children = item.children;
+              return (
+                <div className="overview-nav-group" key={item.label}>
+                  <button
+                    type="button"
+                    className={`overview-nav-link overview-nav-button ${catalogueOpen ? "active" : ""}`}
+                    onClick={() => setCatalogueOpen((open) => !open)}
+                    aria-expanded={catalogueOpen}
+                  >
+                    <Package size={18} strokeWidth={1.8} />
+                    <span>{item.label}</span>
+                    <ChevronRight size={16} className={`nav-chevron ${catalogueOpen ? "is-expanded" : ""}`} />
+                  </button>
+                  {catalogueOpen && (
+                    <div className="overview-nav-submenu">
+                      {children.map((child) => (
+                        <Link
+                          key={child.label}
+                          href={child.href}
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             const Icon = item.icon;
             const active = item.href === "/admin";
 
@@ -329,7 +369,6 @@ export default function AdminDashboardPage() {
             );
           })}
         </nav>
-
         <div className="overview-sidebar-spacer" />
 
         <div className="overview-help-box">
@@ -519,40 +558,21 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              <div
-                className="overview-bar-chart"
-                role="img"
-                aria-label="Monthly booking request totals for the last twelve months"
-              >
+              <div className="overview-recharts booking-recharts">
                 {dataLoading && !dashboard ? (
                   <EmptyChart text="Loading your monthly figures..." />
                 ) : months.length === 0 ? (
                   <EmptyChart text="Monthly figures will appear here." />
                 ) : (
-                  months.map((month) => {
-                    const height =
-                      month.requests === 0
-                        ? 3
-                        : Math.max(8, (month.requests / maxRequests) * 100);
-
-                    return (
-                      <div className="overview-bar-column" key={month.key}>
-                        <div className="overview-bar-value">
-                          {month.requests || ""}
-                        </div>
-                        <div className="overview-bar-track">
-                          <div
-                            className={`overview-bar ${
-                              month.key === currentMonth?.key ? "current" : ""
-                            }`}
-                            style={{ height: `${height}%` }}
-                            title={`${month.label}: ${month.requests} requests`}
-                          />
-                        </div>
-                        <span>{month.label.split(" ")[0]}</span>
-                      </div>
-                    );
-                  })
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={months} margin={{ top: 12, right: 6, left: -18, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e8e5dc" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#77776d" }} tickLine={false} axisLine={false} interval={1} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#77776d" }} tickLine={false} axisLine={false} />
+                      <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #e7e3d8", fontSize: 12 }} />
+                      <Bar dataKey="requests" name="Booking requests" fill="#7b8060" radius={[5, 5, 0, 0]} maxBarSize={28} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 )}
               </div>
 
@@ -579,37 +599,27 @@ export default function AdminDashboardPage() {
                 <span>received to date in this period</span>
               </div>
 
-              <div
-                className="overview-revenue-bars"
-                role="img"
-                aria-label="Monthly revenue from bookings marked as paid"
-              >
+              <div className="overview-recharts revenue-recharts">
                 {dataLoading && !dashboard ? (
                   <EmptyChart text="Loading payment figures..." />
                 ) : months.length === 0 ? (
                   <EmptyChart text="Payment figures will appear here." />
                 ) : (
-                  months.map((month) => {
-                    const height =
-                      month.revenue === 0
-                        ? 3
-                        : Math.max(8, (month.revenue / maxRevenue) * 100);
-
-                    return (
-                      <div className="overview-revenue-column" key={month.key}>
-                        <div className="overview-revenue-track">
-                          <div
-                            className={`overview-revenue-bar ${
-                              month.key === currentMonth?.key ? "current" : ""
-                            }`}
-                            style={{ height: `${height}%` }}
-                            title={`${month.label}: ${money(month.revenue)}`}
-                          />
-                        </div>
-                        <span>{month.label.split(" ")[0]}</span>
-                      </div>
-                    );
-                  })
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={months} margin={{ top: 12, right: 8, left: -12, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="reisRevenueFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#b59a58" stopOpacity={0.38} />
+                          <stop offset="95%" stopColor="#b59a58" stopOpacity={0.03} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e8e5dc" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#77776d" }} tickLine={false} axisLine={false} interval={1} />
+                      <YAxis tickFormatter={(value) => `£${value}`} tick={{ fontSize: 10, fill: "#77776d" }} tickLine={false} axisLine={false} />
+                      <Tooltip formatter={(value) => money(Number(value) || 0)} contentStyle={{ borderRadius: 10, border: "1px solid #e7e3d8", fontSize: 12 }} />
+                      <Area type="monotone" dataKey="revenue" name="Money received" stroke="#a68a45" strokeWidth={2.5} fill="url(#reisRevenueFill)" activeDot={{ r: 5 }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 )}
               </div>
 
