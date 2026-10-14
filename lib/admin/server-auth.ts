@@ -1,6 +1,7 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { getAuth } from "firebase-admin/auth";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { getAdminApp } from "@/lib/firebase-admin";
 
 export async function requireAdmin(
   request: Request
@@ -44,12 +45,17 @@ async function getAuthToken(
   token: string
 ): Promise<DecodedIdToken> {
   try {
-    return await getAuth().verifyIdToken(token);
+    const app = getAdminApp();
+    return await getAuth(app).verifyIdToken(token);
   } catch (error) {
     console.error(
       "Firebase ID-token verification failed:",
       error instanceof Error
-        ? { name: error.name, code: "code" in error ? error.code : undefined, message: error.message }
+        ? {
+            name: error.name,
+            code: "code" in error ? error.code : undefined,
+            message: error.message,
+          }
         : "Unknown verification error"
     );
 
