@@ -565,32 +565,36 @@ export default function ProductsPage() {
 
   return (
     <main className="rental-manager">
-      <div className="rm-nav">
-        <Link href="/admin">Dashboard</Link>
-        <Link href="/admin/homepage">Homepage</Link>
-        <Link href="/admin/media">Media</Link>
-        <Link href="/admin/categories">Categories</Link>
-
-        <Link
-          href="/admin/products"
-          aria-current={!isTent ? "page" : undefined}
-        >
-          Rentals
+      <nav className="rm-nav" aria-label="Admin navigation">
+        <Link className="rm-nav-brand" href="/admin" aria-label="REIS admin dashboard">
+          <span className="rm-nav-mark">R</span>
+          <span className="rm-nav-brand-copy">
+            <strong>REIS</strong>
+            <small>EVENT SERVICES</small>
+          </span>
         </Link>
 
-        <Link
-          href="/admin/products?type=tent"
-          aria-current={isTent ? "page" : undefined}
-        >
-          Tents &amp; Marquees
-        </Link>
+        <details className="rm-nav-menu">
+          <summary aria-label="Toggle admin navigation">
+            <span className="rm-menu-icon" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+            <span className="rm-menu-label">MENU</span>
+          </summary>
 
-        <Link href="/admin/styling-enquiries">
-          Styling Enquiries
-        </Link>
-
-        <Link href="/admin/bookings">Bookings</Link>
-      </div>
+          <div className="rm-nav-panel">
+            <div className="rm-nav-panel-heading">ADMINISTRATION</div>
+            <Link href="/admin">Dashboard</Link>
+            <Link href="/admin/homepage">Homepage</Link>
+            <Link href="/admin/media">Media</Link>
+            <Link href="/admin/categories">Categories</Link>
+            <Link href="/admin/products" aria-current={!isTent ? "page" : undefined}>Rentals</Link>
+            <Link href="/admin/products?type=tent" aria-current={isTent ? "page" : undefined}>Tents &amp; Marquees</Link>
+            <Link href="/admin/styling-enquiries">Styling Enquiries</Link>
+            <Link href="/admin/bookings">Bookings</Link>
+          </div>
+        </details>
+      </nav>
 
       <div className="rm-main">
         <div className="rm-content">
