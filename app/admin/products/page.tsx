@@ -475,7 +475,11 @@ export default function ProductsPage() {
 
     const rentalData = {
       name: form.name.trim(),
-      slug: slugify(form.slug || form.name),
+      slug: slugify(
+        editingId && form.slug.trim()
+          ? form.slug
+          : form.name
+      ),
       type: productType,
       categoryId: form.categoryId,
       description: form.description.trim(),
@@ -560,8 +564,8 @@ export default function ProductsPage() {
   }
 
   return (
-    <main className="admin">
-      <div className="adminnav">
+    <main className="rental-manager">
+      <div className="rm-nav">
         <Link href="/admin">Dashboard</Link>
         <Link href="/admin/homepage">Homepage</Link>
         <Link href="/admin/media">Media</Link>
@@ -588,8 +592,8 @@ export default function ProductsPage() {
         <Link href="/admin/bookings">Bookings</Link>
       </div>
 
-      <div className="section">
-        <div className="wrap">
+      <div className="rm-main">
+        <div className="rm-content">
           <div className="section-head">
             <div>
               <div className="eyebrow">CATALOGUE MANAGEMENT</div>
@@ -645,17 +649,7 @@ export default function ProductsPage() {
                 />
               </label>
 
-              <label>
-                URL slug
 
-                <input
-                  value={form.slug}
-                  onChange={(event) =>
-                    updateField("slug", event.target.value)
-                  }
-                  placeholder="product-name"
-                />
-              </label>
 
               <label>
                 Category
