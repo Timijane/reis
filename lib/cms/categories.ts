@@ -11,6 +11,8 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
+export type CatalogueSection = "rentals" | "tents" | "portfolio";
+
 export interface RentalCategory {
   id: string;
   name: string;
@@ -20,11 +22,53 @@ export interface RentalCategory {
   active: boolean;
   featuredOnHomepage: boolean;
   homepageOrder: number;
+  section?: CatalogueSection;
   destinationType: "category" | "rental" | "custom";
   destination: string;
   createdAt?: unknown;
   updatedAt?: unknown;
 }
+
+export function inferCategorySection(category: {
+  name?: string;
+  slug?: string;
+  section?: CatalogueSection;
+}): CatalogueSection {
+  if (category.section) return category.section;
+
+  const text = `${category.name ?? ""} ${category.slug ?? ""}`.toLowerCase();
+
+  if (
+    text.includes("marquee") ||
+    text.includes("tent")
+  ) {
+    return "tents";
+  }
+
+  return "rentals";
+}
+
+export const catalogueSections: {
+  value: CatalogueSection;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "rentals",
+    label: "Rentals",
+    description: "Chairs, tables, tableware, decorations and equipment.",
+  },
+  {
+    value: "tents",
+    label: "Tents & Marquees",
+    description: "Tents, marquees and related tent-hire items.",
+  },
+  {
+    value: "portfolio",
+    label: "Styling & Portfolio",
+    description: "Styling inspiration and completed-event projects.",
+  },
+];
 
 export const defaultCategories: Omit<
   RentalCategory,
@@ -60,27 +104,45 @@ export const defaultCategories: Omit<
   ["Kids Soft Play", "kids-soft-play"],
   ["Lighting", "lighting"],
   ["Flooring", "flooring"],
-].map(([name, slug], index) => ({
-  name,
-  slug,
-  description: "",
-  imageUrl: "",
-  active: true,
-  featuredOnHomepage: index < 8,
-  homepageOrder: index < 8 ? index + 1 : 999,
-  destinationType: "category" as const,
-  destination: `/rentals?category=${slug}`,
-}));
+].map(([name, slug], index) => {
+  const section: CatalogueSection =
+    slug === "marquee" ? "tents" : "rentals";
+
+  return {
+    name,
+    slug,
+    description: "",
+    imageUrl: "",
+    active: true,
+    featuredOnHomepage: index < 8,
+    homepageOrder: index < 8 ? index + 1 : 999,
+    section,
+    destinationType: "category" as const,
+    destination:
+      section === "tents"
+        ? `/booking/tents?category=${slug}`
+        : `/booking/rentals?category=${slug}`,
+  };
+});
 
 export async function getCategories(): Promise<RentalCategory[]> {
   const snapshot = await getDocs(
     query(collection(db, "categories"), orderBy("homepageOrder", "asc"))
   );
 
-  return snapshot.docs.map((item) => ({
-    id: item.id,
-    ...(item.data() as Omit<RentalCategory, "id">),
-  }));
+  return snapshot.docs.map((item) => {
+    const data = item.data() as Omit<RentalCategory, "id">;
+
+    return {
+      ...data,
+      id: item.id,
+      section: inferCategorySection({
+        name: data.name,
+        slug: data.slug,
+        section: data.section,
+      }),
+    };
+  });
 }
 
 export async function createCategory(

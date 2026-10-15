@@ -16,6 +16,8 @@ import {
 import {
   createCategory,
   defaultCategories,
+  catalogueSections,
+  inferCategorySection,
   deleteCategory,
   getCategories,
   updateCategory,
@@ -34,6 +36,7 @@ const emptyCategory: CategoryForm = {
   slug: "",
   description: "",
   imageUrl: "",
+  section: "rentals",
   active: true,
   featuredOnHomepage: false,
   homepageOrder: 999,
@@ -100,6 +103,7 @@ export default function CategoriesPage() {
       slug: category.slug,
       description: category.description,
       imageUrl: category.imageUrl,
+      section: inferCategorySection(category),
       active: category.active,
       featuredOnHomepage: category.featuredOnHomepage,
       homepageOrder: category.homepageOrder,
@@ -134,9 +138,15 @@ export default function CategoriesPage() {
       name,
       slug,
       description: form.description.trim(),
-      imageUrl: "",
+      imageUrl: form.imageUrl,
+      section: form.section,
       destinationType: "category" as const,
-      destination: `/rentals?category=${slug}`,
+      destination:
+        form.section === "tents"
+          ? `/booking/tents?category=${slug}`
+          : form.section === "portfolio"
+            ? `/booking/styling?category=${slug}`
+            : `/booking/rentals?category=${slug}`,
       homepageOrder: editing?.homepageOrder ?? 999,
       featuredOnHomepage: editing?.featuredOnHomepage ?? false,
     };
@@ -453,6 +463,31 @@ export default function CategoriesPage() {
                   maxLength={80}
                 />
                 <small>Use a clear name customers will recognise.</small>
+              </label>
+
+              <label className="full-width">
+                <span>Which section should use this category? <b aria-hidden="true">*</b></span>
+                <select
+                  required
+                  value={form.section ?? "rentals"}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      section: event.target.value as NonNullable<CategoryForm["section"]>,
+                    }))
+                  }
+                >
+                  {catalogueSections.map((section) => (
+                    <option key={section.value} value={section.value}>
+                      {section.label}
+                    </option>
+                  ))}
+                </select>
+                <small>
+                  {catalogueSections.find(
+                    (section) => section.value === (form.section ?? "rentals")
+                  )?.description}
+                </small>
               </label>
 
               <label className="full-width">

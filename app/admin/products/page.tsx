@@ -2,9 +2,16 @@
 
 import "./products.css";
 
-import { FormEvent, useEffect, useState } from "react";
+import {
+  type FormEvent,
+  useEffect,
+  useState,
+} from "react";
 import Link from "next/link";
-import { getCategories, type RentalCategory } from "@/lib/cms/categories";
+import {
+  getCategories,
+  type RentalCategory,
+} from "@/lib/cms/categories";
 import {
   createRental,
   deleteRental,
@@ -12,6 +19,36 @@ import {
   updateRental,
   type Rental,
 } from "@/lib/cms/rentals";
+
+type CloudinaryUploadResult = {
+  event?: string;
+  info?: {
+    secure_url?: string;
+    public_id?: string;
+    original_filename?: string;
+    bytes?: number;
+    format?: string;
+  };
+};
+
+type CloudinaryWidget = {
+  open: () => void;
+  close: () => void;
+  destroy: () => void;
+};
+
+type CloudinaryWidgetOptions = {
+  cloudName: string;
+  uploadPreset: string;
+  folder: string;
+  sources: string[];
+  multiple: boolean;
+  maxFileSize: number;
+  clientAllowedFormats: string[];
+  cropping: boolean;
+  resourceType: string;
+};
+
 
 type FormState = {
   name: string;
@@ -53,12 +90,12 @@ function slugify(value: string) {
 
 function toForm(rental: Rental): FormState {
   return {
-    name: rental.name,
-    slug: rental.slug,
+    name: rental.name || "",
+    slug: rental.slug || "",
     categoryId: rental.categoryId || "",
-    description: rental.description,
+    description: rental.description || "",
     image: rental.image || "",
-    price: String(rental.price),
+    price: String(rental.price ?? ""),
     minimumQuantity: String(rental.minimumQuantity || 1),
     maximumQuantity:
       rental.maximumQuantity !== undefined
@@ -74,40 +111,146 @@ function toForm(rental: Rental): FormState {
   };
 }
 
+function loadCloudinaryWidget(): Promise<void> {
+  if (typeof window === "undefined") {
+    return Promise.reject(
+      new Error("Image uploading is only available in the browser.")
+    );
+  }
+
+  if (window.cloudinary) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const scriptId = "reis-cloudinary-upload-widget";
+    let script = document.getElementById(
+      scriptId
+    ) as HTMLScriptElement | null;
+
+    if (script?.dataset.loaded === "true" && window.cloudinary) {
+      resolve();
+      return;
+    }
+
+    const handleLoad = () => {
+      if (window.cloudinary) {
+        if (script) script.dataset.loaded = "true";
+        resolve();
+      } else {
+        reject(
+          new Error(
+            "Cloudinary loaded, but its upload widget is unavailable. Refresh the page and try again."
+          )
+        );
+      }
+    };
+
+    const handleError = () => {
+      reject(
+        new Error(
+          "Unable to load Cloudinary. Check your internet connection and try again."
+        )
+      );
+    };
+
+    if (!script) {
+      script = document.createElement("script");
+      script.id = scriptId;
+      script.src =
+        "https://upload-widget.cloudinary.com/global/all.js";
+      script.async = true;
+      script.addEventListener("load", handleLoad, { once: true });
+      script.addEventListener("error", handleError, { once: true });
+      document.head.appendChild(script);
+      return;
+    }
+
+    script.addEventListener("load", handleLoad, { once: true });
+    script.addEventListener("error", handleError, { once: true });
+
+    if (window.cloudinary) {
+      resolve();
+    }
+  });
+}
+
 export default function ProductsPage() {
+  const [productType, setProductType] = useState<"rental" | "tent">(
+    "rental"
+  );
+
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [categories, setCategories] = useState<RentalCategory[]>([]);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error" | "info">(
+    "info"
+  );
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    setProductType(
+      params.get("type") === "tent" ? "tent" : "rental"
+    );
+  }, []);
+
+  const isTent = productType === "tent";
+  const productLabel = isTent ? "Tent & Marquee" : "Rental";
+  const productPlural = isTent ? "Tents & Marquees" : "Rentals";
+
+  const availableCategories = categories
+    .filter(
+      (category) =>
+        category.active &&
+        (
+          category.section === "tents" ||
+          category.section === "rentals" ||
+          !category.section
+        )
+    )
+    .filter(
+      (category) =>
+        (category.section === "tents") === isTent
+    );
 
   async function load() {
     setLoading(true);
 
     try {
-      const [rentalData, categoryData] = await Promise.all([
+      const [allProducts, categoryData] = await Promise.all([
         getRentals(),
         getCategories(),
       ]);
 
-      setRentals(rentalData);
+      const filteredProducts = allProducts.filter(
+        (item) => (item.type || "rental") === productType
+      );
+
+      setRentals(filteredProducts);
       setCategories(categoryData);
     } catch (error) {
       setMessage(
         error instanceof Error
           ? error.message
-          : "Unable to load rentals."
+          : "Unable to load products."
       );
+      setMessageType("error");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    load();
-  }, []);
+    void load();
+    // Reload when switching between the rental and tent catalogues.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productType]);
 
   function updateField<K extends keyof FormState>(
     key: K,
@@ -119,22 +262,123 @@ export default function ProductsPage() {
     }));
   }
 
+  function showMessage(
+    text: string,
+    type: "success" | "error" | "info" = "info"
+  ) {
+    setMessage(text);
+    setMessageType(type);
+  }
+
   function startNew() {
     setEditingId(null);
     setForm(emptyForm);
-    setMessage("");
+    showMessage("", "info");
   }
 
   function editRental(rental: Rental) {
     setEditingId(rental.id);
     setForm(toForm(rental));
-    setMessage("");
+    showMessage("", "info");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function save(event: FormEvent) {
+  async function uploadImage() {
+    if (uploading || saving) return;
+
+    setUploading(true);
+    showMessage("Preparing image uploader…", "info");
+
+    try {
+      await loadCloudinaryWidget();
+
+      if (!window.cloudinary) {
+        throw new Error(
+          "Cloudinary uploader is unavailable. Refresh the page and try again."
+        );
+      }
+
+      const widget = window.cloudinary.createUploadWidget(
+        {
+          cloudName: "dmbjrohtn",
+          uploadPreset: "pelumi",
+          folder: "reis/products",
+          sources: ["local", "camera"],
+          multiple: false,
+          maxFileSize: 10000000,
+          clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+          cropping: false,
+          resourceType: "image",
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            setUploading(false);
+            showMessage(
+              "Image upload failed. Check your Cloudinary upload preset and try again.",
+              "error"
+            );
+            return;
+          }
+
+          if (!result) return;
+
+          if (result.event === "success" && result.info?.secure_url) {
+            const imageUrl = result.info.secure_url;
+
+            if (
+              !imageUrl.startsWith("https://res.cloudinary.com/")
+            ) {
+              setUploading(false);
+              showMessage(
+                "The returned image URL is not a recognised Cloudinary image URL.",
+                "error"
+              );
+              return;
+            }
+
+            updateField("image", imageUrl);
+            setUploading(false);
+
+            showMessage(
+              "Image uploaded successfully. Save the product to keep the image assignment.",
+              "success"
+            );
+          }
+
+          if (result.event === "close") {
+            setUploading(false);
+            showMessage(
+              "Image uploader closed. Your product has not been saved.",
+              "info"
+            );
+          }
+        }
+      );
+
+      widget.open();
+    } catch (error) {
+      setUploading(false);
+      showMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to open the Cloudinary uploader.",
+        "error"
+      );
+    }
+  }
+
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
+    showMessage("", "info");
+
+    if (saving || uploading) {
+      showMessage(
+        "Wait for the current upload or save operation to finish.",
+        "error"
+      );
+      return;
+    }
 
     const price = Number(form.price);
     const minimumQuantity = Number(form.minimumQuantity || 1);
@@ -146,52 +390,96 @@ export default function ProductsPage() {
       : undefined;
 
     if (!form.name.trim()) {
-      setMessage("Enter a rental name.");
+      showMessage(
+        `Enter a ${productLabel.toLowerCase()} name.`,
+        "error"
+      );
       return;
     }
 
     if (!form.categoryId) {
-      setMessage("Choose a category.");
+      showMessage("Choose a category for this product.", "error");
+      return;
+    }
+
+    const selectedCategory = availableCategories.find(
+      (category) => category.id === form.categoryId
+    );
+
+    if (!selectedCategory) {
+      showMessage(
+        "The selected category is not available in this catalogue. Choose another category.",
+        "error"
+      );
       return;
     }
 
     if (!Number.isFinite(price) || price < 0) {
-      setMessage("Enter a valid price.");
+      showMessage("Enter a valid price.", "error");
       return;
     }
 
-    if (!Number.isInteger(minimumQuantity) || minimumQuantity < 1) {
-      setMessage("Minimum quantity must be at least 1.");
+    if (
+      !Number.isInteger(minimumQuantity) ||
+      minimumQuantity < 1
+    ) {
+      showMessage(
+        "Minimum quantity must be a whole number of at least 1.",
+        "error"
+      );
       return;
     }
 
     if (
       maximumQuantity !== undefined &&
-      (!Number.isInteger(maximumQuantity) ||
-        maximumQuantity < minimumQuantity)
+      (
+        !Number.isInteger(maximumQuantity) ||
+        maximumQuantity < minimumQuantity
+      )
     ) {
-      setMessage("Maximum quantity must be greater than minimum quantity.");
+      showMessage(
+        "Maximum quantity must be a whole number greater than or equal to the minimum quantity.",
+        "error"
+      );
       return;
     }
 
     if (
       quantityAvailable !== undefined &&
-      (!Number.isInteger(quantityAvailable) ||
-        quantityAvailable < 0)
+      (
+        !Number.isInteger(quantityAvailable) ||
+        quantityAvailable < 0
+      )
     ) {
-      setMessage("Available quantity must be a whole number.");
+      showMessage(
+        "Available quantity must be a non-negative whole number.",
+        "error"
+      );
       return;
     }
 
-    setSaving(true);
+    const image = form.image.trim();
+
+    if (
+      image &&
+      !/^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//i.test(
+        image
+      )
+    ) {
+      showMessage(
+        "Use a valid HTTPS Cloudinary image URL, or upload an image using the upload button.",
+        "error"
+      );
+      return;
+    }
 
     const rentalData = {
       name: form.name.trim(),
       slug: slugify(form.slug || form.name),
-      type: "rental" as const,
+      type: productType,
       categoryId: form.categoryId,
       description: form.description.trim(),
-      image: form.image.trim(),
+      image,
       active: form.active,
       featured: form.featured,
       price,
@@ -206,22 +494,37 @@ export default function ProductsPage() {
         : {}),
     };
 
+    if (!rentalData.slug) {
+      showMessage("Enter a valid product name or URL slug.", "error");
+      return;
+    }
+
+    setSaving(true);
+
     try {
       if (editingId) {
         await updateRental(editingId, rentalData);
-        setMessage("Rental updated successfully.");
+        showMessage(
+          `${productLabel} updated successfully.`,
+          "success"
+        );
       } else {
         await createRental(rentalData);
-        setMessage("Rental created successfully.");
+        showMessage(
+          `${productLabel} created successfully.`,
+          "success"
+        );
       }
 
+      setEditingId(null);
+      setForm(emptyForm);
       await load();
-      startNew();
     } catch (error) {
-      setMessage(
+      showMessage(
         error instanceof Error
           ? error.message
-          : "Unable to save rental."
+          : "Unable to save the product. Check your Firebase permissions and try again.",
+        "error"
       );
     } finally {
       setSaving(false);
@@ -237,17 +540,21 @@ export default function ProductsPage() {
 
     try {
       await deleteRental(rental.id);
-      setMessage("Rental deleted.");
-      await load();
+
+      showMessage(`${productLabel} deleted.`, "success");
 
       if (editingId === rental.id) {
-        startNew();
+        setEditingId(null);
+        setForm(emptyForm);
       }
+
+      await load();
     } catch (error) {
-      setMessage(
+      showMessage(
         error instanceof Error
           ? error.message
-          : "Unable to delete rental."
+          : "Unable to delete the product.",
+        "error"
       );
     }
   }
@@ -259,7 +566,25 @@ export default function ProductsPage() {
         <Link href="/admin/homepage">Homepage</Link>
         <Link href="/admin/media">Media</Link>
         <Link href="/admin/categories">Categories</Link>
-        <Link href="/admin/products">Rentals</Link>
+
+        <Link
+          href="/admin/products"
+          aria-current={!isTent ? "page" : undefined}
+        >
+          Rentals
+        </Link>
+
+        <Link
+          href="/admin/products?type=tent"
+          aria-current={isTent ? "page" : undefined}
+        >
+          Tents &amp; Marquees
+        </Link>
+
+        <Link href="/admin/styling-enquiries">
+          Styling Enquiries
+        </Link>
+
         <Link href="/admin/bookings">Bookings</Link>
       </div>
 
@@ -268,9 +593,12 @@ export default function ProductsPage() {
           <div className="section-head">
             <div>
               <div className="eyebrow">CATALOGUE MANAGEMENT</div>
-              <h1>Rentals</h1>
+              <h1>{productPlural}</h1>
+
               <p className="lead">
-                Add and manage the physical items customers can rent.
+                {isTent
+                  ? "Add and manage tents and marquees available for hire."
+                  : "Add and manage the physical items customers can rent."}
               </p>
             </div>
 
@@ -279,108 +607,124 @@ export default function ProductsPage() {
               className="button"
               onClick={startNew}
             >
-              + New rental
+              + New {productLabel.toLowerCase()}
             </button>
           </div>
 
           {message && (
-            <div className="admin-message">
+            <div
+              className="admin-message"
+              role="status"
+              aria-live="polite"
+              data-type={messageType}
+            >
               {message}
             </div>
           )}
 
           <form className="admin-card" onSubmit={save}>
             <div className="eyebrow">
-              {editingId ? "EDIT RENTAL" : "NEW RENTAL"}
+              {editingId
+                ? `EDIT ${productLabel.toUpperCase()}`
+                : `NEW ${productLabel.toUpperCase()}`}
             </div>
 
             <div className="form-grid">
               <label>
-                Rental name
+                {productLabel} name
+
                 <input
                   value={form.name}
-                  onChange={(e) =>
-                    updateField("name", e.target.value)
+                  onChange={(event) =>
+                    updateField("name", event.target.value)
                   }
-                  placeholder="Chiavari Chair"
+                  placeholder={
+                    isTent ? "Premium Marquee Tent" : "Chiavari Chair"
+                  }
+                  required
                 />
               </label>
 
               <label>
                 URL slug
+
                 <input
                   value={form.slug}
-                  onChange={(e) =>
-                    updateField("slug", e.target.value)
+                  onChange={(event) =>
+                    updateField("slug", event.target.value)
                   }
-                  placeholder="chiavari-chair"
+                  placeholder="product-name"
                 />
               </label>
 
               <label>
                 Category
+
                 <select
                   value={form.categoryId}
-                  onChange={(e) =>
-                    updateField("categoryId", e.target.value)
+                  onChange={(event) =>
+                    updateField("categoryId", event.target.value)
                   }
+                  required
                 >
                   <option value="">Select category</option>
-                  {categories
-                    .filter((category) => category.active)
-                    .map((category) => (
-                      <option
-                        key={category.id}
-                        value={category.id}
-                      >
-                        {category.name}
-                      </option>
-                    ))}
+
+                  {availableCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
                 </select>
+
+                {availableCategories.length === 0 && (
+                  <small>
+                    No active categories are available. Create an active{" "}
+                    {isTent ? "tent and marquee" : "rental"} category first.
+                  </small>
+                )}
               </label>
 
               <label>
                 Price per item (£)
+
                 <input
                   type="number"
                   min="0"
                   step="0.01"
                   value={form.price}
-                  onChange={(e) =>
-                    updateField("price", e.target.value)
+                  onChange={(event) =>
+                    updateField("price", event.target.value)
                   }
                   placeholder="1.00"
+                  required
                 />
               </label>
 
               <label>
                 Minimum quantity
+
                 <input
                   type="number"
                   min="1"
                   step="1"
                   value={form.minimumQuantity}
-                  onChange={(e) =>
-                    updateField(
-                      "minimumQuantity",
-                      e.target.value
-                    )
+                  onChange={(event) =>
+                    updateField("minimumQuantity", event.target.value)
                   }
+                  required
                 />
               </label>
 
               <label>
                 Maximum quantity
+
                 <input
                   type="number"
-                  min="1"
+                  min={form.minimumQuantity || "1"}
                   step="1"
                   value={form.maximumQuantity}
-                  onChange={(e) =>
-                    updateField(
-                      "maximumQuantity",
-                      e.target.value
-                    )
+                  onChange={(event) =>
+                    updateField("maximumQuantity", event.target.value)
                   }
                   placeholder="Optional"
                 />
@@ -388,16 +732,14 @@ export default function ProductsPage() {
 
               <label>
                 Available quantity
+
                 <input
                   type="number"
                   min="0"
                   step="1"
                   value={form.quantityAvailable}
-                  onChange={(e) =>
-                    updateField(
-                      "quantityAvailable",
-                      e.target.value
-                    )
+                  onChange={(event) =>
+                    updateField("quantityAvailable", event.target.value)
                   }
                   placeholder="Optional"
                 />
@@ -405,12 +747,13 @@ export default function ProductsPage() {
 
               <label>
                 Inventory mode
+
                 <select
                   value={form.inventoryMode}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     updateField(
                       "inventoryMode",
-                      e.target.value as Rental["inventoryMode"]
+                      event.target.value as Rental["inventoryMode"]
                     )
                   }
                 >
@@ -420,35 +763,119 @@ export default function ProductsPage() {
                   <option value="admin_confirmed">
                     Admin confirmed
                   </option>
-                  <option value="enquiry">
-                    Enquiry / quote
-                  </option>
+                  <option value="enquiry">Enquiry / quote</option>
                 </select>
               </label>
 
-              <label className="wide">
-                Image URL
+              <div className="wide">
+                <label htmlFor="product-image-url">
+                  Product image
+                </label>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginTop: "8px",
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="button"
+                    onClick={() => void uploadImage()}
+                    disabled={uploading || saving}
+                  >
+                    {uploading
+                      ? "Opening uploader…"
+                      : form.image
+                        ? "Replace image"
+                        : "Upload image"}
+                  </button>
+
+                  {form.image && (
+                    <button
+                      type="button"
+                      className="button secondary"
+                      onClick={() => updateField("image", "")}
+                      disabled={uploading || saving}
+                    >
+                      Remove image
+                    </button>
+                  )}
+                </div>
+
+                {form.image ? (
+                  <div
+                    style={{
+                      marginTop: "16px",
+                      maxWidth: "420px",
+                    }}
+                  >
+                    <img
+                      src={form.image}
+                      alt={`${form.name || productLabel} preview`}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        maxHeight: "280px",
+                        objectFit: "contain",
+                        borderRadius: "8px",
+                        background: "#f5f3ee",
+                      }}
+                    />
+
+                    <small
+                      style={{
+                        display: "block",
+                        marginTop: "8px",
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      Uploaded image preview. Save the product to persist
+                      the image URL.
+                    </small>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      padding: "24px",
+                      border: "1px dashed #c9c5bc",
+                      borderRadius: "8px",
+                      background: "#faf9f6",
+                    }}
+                  >
+                    <p style={{ margin: 0 }}>
+                      No image selected. Upload a JPG, JPEG, PNG or WebP
+                      image up to 10 MB.
+                    </p>
+                  </div>
+                )}
+
                 <input
+                  id="product-image-url"
+                  type="hidden"
                   value={form.image}
-                  onChange={(e) =>
-                    updateField("image", e.target.value)
-                  }
-                  placeholder="Cloudinary image URL"
+                  readOnly
                 />
-              </label>
+              </div>
 
               <label className="wide">
                 Description
+
                 <textarea
                   value={form.description}
-                  onChange={(e) =>
-                    updateField(
-                      "description",
-                      e.target.value
-                    )
+                  onChange={(event) =>
+                    updateField("description", event.target.value)
                   }
                   rows={4}
-                  placeholder="Describe the rental item..."
+                  placeholder={
+                    isTent
+                      ? "Describe the tent or marquee, capacity and hire details..."
+                      : "Describe the rental item..."
+                  }
                 />
               </label>
             </div>
@@ -458,8 +885,8 @@ export default function ProductsPage() {
                 <input
                   type="checkbox"
                   checked={form.active}
-                  onChange={(e) =>
-                    updateField("active", e.target.checked)
+                  onChange={(event) =>
+                    updateField("active", event.target.checked)
                   }
                 />
                 Active
@@ -469,11 +896,8 @@ export default function ProductsPage() {
                 <input
                   type="checkbox"
                   checked={form.featured}
-                  onChange={(e) =>
-                    updateField(
-                      "featured",
-                      e.target.checked
-                    )
+                  onChange={(event) =>
+                    updateField("featured", event.target.checked)
                   }
                 />
                 Featured on catalogue
@@ -484,13 +908,13 @@ export default function ProductsPage() {
               <button
                 type="submit"
                 className="button"
-                disabled={saving}
+                disabled={saving || uploading}
               >
                 {saving
-                  ? "Saving..."
+                  ? "Saving…"
                   : editingId
                     ? "Save changes"
-                    : "Create rental"}
+                    : `Create ${productLabel.toLowerCase()}`}
               </button>
 
               {editingId && (
@@ -498,6 +922,7 @@ export default function ProductsPage() {
                   type="button"
                   className="button secondary"
                   onClick={startNew}
+                  disabled={saving || uploading}
                 >
                   Cancel
                 </button>
@@ -508,20 +933,22 @@ export default function ProductsPage() {
           <div className="section-head">
             <div>
               <div className="eyebrow">CATALOGUE</div>
+
               <h2>
                 {loading
-                  ? "Loading..."
-                  : `${rentals.length} rental${rentals.length === 1 ? "" : "s"}`}
+                  ? "Loading…"
+                  : `${rentals.length} ${productPlural.toLowerCase()}`}
               </h2>
             </div>
           </div>
 
           {!loading && rentals.length === 0 ? (
             <div className="admin-card">
-              <h3>No rentals yet</h3>
+              <h3>No {productPlural.toLowerCase()} yet</h3>
+
               <p>
-                Create your first rental above. It will become
-                available to the booking catalogue.
+                Create your first item above. Only active products should
+                appear in the public catalogue.
               </p>
             </div>
           ) : (
@@ -532,7 +959,7 @@ export default function ProductsPage() {
                     {rental.image ? (
                       <img
                         src={rental.image}
-                        alt=""
+                        alt={rental.name}
                       />
                     ) : (
                       <span>REIS</span>
@@ -541,9 +968,11 @@ export default function ProductsPage() {
 
                   <div className="rental-info">
                     <strong>{rental.name}</strong>
+
                     <span>
-                      £{rental.price.toFixed(2)} / item
+                      £{Number(rental.price || 0).toFixed(2)} / item
                     </span>
+
                     <small>
                       {categories.find(
                         (category) =>
@@ -556,9 +985,8 @@ export default function ProductsPage() {
                     <span>
                       {rental.active ? "Active" : "Hidden"}
                     </span>
-                    <small>
-                      {rental.inventoryMode}
-                    </small>
+
+                    <small>{rental.inventoryMode}</small>
                   </div>
 
                   <div className="rental-actions">
@@ -573,7 +1001,8 @@ export default function ProductsPage() {
                     <button
                       type="button"
                       className="button danger"
-                      onClick={() => removeRental(rental)}
+                      onClick={() => void removeRental(rental)}
+                      disabled={saving || uploading}
                     >
                       Delete
                     </button>

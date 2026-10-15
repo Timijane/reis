@@ -1,12 +1,11 @@
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
-import { getActiveRentals } from '@/lib/cms/rentals';
+import { getActiveTents } from '@/lib/cms/rentals';
 
 export const dynamic = 'force-dynamic';
 
 export default async function TentsPage() {
-  const rentals = await getActiveRentals();
-  const tents = rentals.filter((product) => product.type === 'tent');
+  const tents = await getActiveTents();
 
   return (
     <main className="container">
