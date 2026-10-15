@@ -193,11 +193,17 @@ export default function ProductsPage() {
   );
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const syncProductType = () => {
+      const params = new URLSearchParams(window.location.search);
+      setProductType(params.get("type") === "tent" ? "tent" : "rental");
+    };
 
-    setProductType(
-      params.get("type") === "tent" ? "tent" : "rental"
-    );
+    syncProductType();
+    window.addEventListener("popstate", syncProductType);
+
+    return () => {
+      window.removeEventListener("popstate", syncProductType);
+    };
   }, []);
 
   const isTent = productType === "tent";
@@ -586,10 +592,11 @@ export default function ProductsPage() {
             <div className="rm-nav-panel-heading">ADMINISTRATION</div>
             <Link href="/admin">Dashboard</Link>
             <Link href="/admin/homepage">Homepage</Link>
+            <Link href="/admin/services">Services</Link>
             <Link href="/admin/media">Media</Link>
             <Link href="/admin/categories">Categories</Link>
-            <Link href="/admin/products" aria-current={!isTent ? "page" : undefined}>Rentals</Link>
-            <Link href="/admin/products?type=tent" aria-current={isTent ? "page" : undefined}>Tents &amp; Marquees</Link>
+            <a href="/admin/products" aria-current={!isTent ? "page" : undefined}>Rentals</a>
+            <a href="/admin/products?type=tent" aria-current={isTent ? "page" : undefined}>Tents &amp; Marquees</a>
             <Link href="/admin/styling-enquiries">Styling Enquiries</Link>
             <Link href="/admin/bookings">Bookings</Link>
           </div>

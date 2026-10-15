@@ -86,6 +86,7 @@ const navigation = [
     { label: "Tents & Marquees", href: "/admin/products?type=tent" },
     { label: "Styling Portfolio", href: "/admin/homepage#styling" },
   ]},
+  { label: "Services", href: "/admin/services", icon: Package },
   { label: "Homepage", href: "/admin/homepage", icon: Home },
   { label: "Media library", href: "/admin/media", icon: FileImage },
 ];
