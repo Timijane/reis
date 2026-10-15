@@ -81,14 +81,26 @@ type DashboardData = {
 const navigation = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
   { label: "Bookings", href: "/admin/bookings", icon: CalendarDays },
-  { label: "Manage Catalogue", icon: Package, children: [
-    { label: "Equipment Rentals", href: "/admin/products" },
-    { label: "Tents & Marquees", href: "/admin/products?type=tent" },
-    { label: "Styling Portfolio", href: "/admin/homepage#styling" },
-  ]},
-  { label: "Services", href: "/admin/services", icon: Package },
+  {
+    label: "Manage Catalogue",
+    icon: Package,
+    children: [
+      { label: "Equipment Rentals", href: "/admin/products" },
+      { label: "Tents & Marquees", href: "/admin/products?type=tent" },
+      { label: "Categories", href: "/admin/categories" },
+    ],
+  },
+  {
+    label: "Styling",
+    icon: Package,
+    children: [
+      { label: "Styling Portfolio", href: "/admin/services" },
+      { label: "Services Content", href: "/admin/services/content" },
+      { label: "Styling Enquiries", href: "/admin/styling-enquiries" },
+    ],
+  },
   { label: "Homepage", href: "/admin/homepage", icon: Home },
-  { label: "Media library", href: "/admin/media", icon: FileImage },
+  { label: "Media Library", href: "/admin/media", icon: FileImage },
 ];
 
 const money = (value: number) =>
