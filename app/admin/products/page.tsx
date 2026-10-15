@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   getCategories,
   type RentalCategory,
@@ -176,9 +177,8 @@ function loadCloudinaryWidget(): Promise<void> {
 }
 
 export default function ProductsPage() {
-  const [productType, setProductType] = useState<"rental" | "tent">(
-    "rental"
-  );
+  const router = useRouter();
+  const [productType, setProductType] = useState<"rental" | "tent">("rental");
 
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [categories, setCategories] = useState<RentalCategory[]>([]);
@@ -192,6 +192,7 @@ export default function ProductsPage() {
     "info"
   );
 
+
   useEffect(() => {
     const syncProductType = () => {
       const params = new URLSearchParams(window.location.search);
@@ -200,10 +201,7 @@ export default function ProductsPage() {
 
     syncProductType();
     window.addEventListener("popstate", syncProductType);
-
-    return () => {
-      window.removeEventListener("popstate", syncProductType);
-    };
+    return () => window.removeEventListener("popstate", syncProductType);
   }, []);
 
   const isTent = productType === "tent";
@@ -595,8 +593,28 @@ export default function ProductsPage() {
             <Link href="/admin/services">Services</Link>
             <Link href="/admin/media">Media</Link>
             <Link href="/admin/categories">Categories</Link>
-            <a href="/admin/products" aria-current={!isTent ? "page" : undefined}>Rentals</a>
-            <a href="/admin/products?type=tent" aria-current={isTent ? "page" : undefined}>Tents &amp; Marquees</a>
+            <Link
+              href="/admin/products"
+              aria-current={!isTent ? "page" : undefined}
+              onClick={(event) => {
+                event.preventDefault();
+                router.push("/admin/products");
+                setProductType("rental");
+              }}
+            >
+              Rentals
+            </Link>
+            <Link
+              href="/admin/products?type=tent"
+              aria-current={isTent ? "page" : undefined}
+              onClick={(event) => {
+                event.preventDefault();
+                router.push("/admin/products?type=tent");
+                setProductType("tent");
+              }}
+            >
+              Tents &amp; Marquees
+            </Link>
             <Link href="/admin/styling-enquiries">Styling Enquiries</Link>
             <Link href="/admin/bookings">Bookings</Link>
           </div>
