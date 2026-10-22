@@ -188,8 +188,8 @@ export async function POST(req: Request) {
         eventDate: startDate,
         endDate,
         durationDays,
-        image: product.image,
-        tentSize: source?.tentSize,
+        ...(product.image ? { image: product.image } : {}),
+        ...(source?.tentSize ? { tentSize: source.tentSize } : {}),
       };
     });
 
@@ -204,7 +204,7 @@ export async function POST(req: Request) {
         name: customer.name.trim(),
         email: customer.email.trim(),
         phone: customer.phone.trim(),
-        whatsapp: customer.whatsapp?.trim() || undefined,
+        ...(customer.whatsapp?.trim() ? { whatsapp: customer.whatsapp.trim() } : {}),
       },
 
       event: {
@@ -212,19 +212,21 @@ export async function POST(req: Request) {
         endDate,
         eventType: event.eventType?.trim() || '',
         venue: event.venue.trim(),
-        postcode: event.postcode?.trim() || undefined,
-        guestCount:
-          typeof event.guestCount === 'number'
-            ? event.guestCount
-            : undefined,
+        ...(event.postcode?.trim() ? { postcode: event.postcode.trim() } : {}),
+        ...(typeof event.guestCount === 'number'
+          ? { guestCount: event.guestCount }
+          : {}),
       },
 
       items: bookingItems,
       productIds: requestedIds,
 
-      site: body.site,
-      serviceDescription: body.serviceDescription,
-      servicePhotos: body.servicePhotos,
+      ...(body.site !== undefined ? { site: body.site } : {}),
+      ...(body.serviceDescription !== undefined
+        ? { serviceDescription: body.serviceDescription }
+        : {}),
+      ...(body.servicePhotos !== undefined
+        ? { servicePhotos: body.servicePhotos } : {}),
 
       pricing: {
         ...pricing,
