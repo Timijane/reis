@@ -32,11 +32,11 @@ export default async function RentalsPage() {
         </section>
       ) : (
         <section
-          className="grid"
+          className="grid reis-product-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 24,
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+            gap: 16,
             paddingBottom: 60,
           }}
         >

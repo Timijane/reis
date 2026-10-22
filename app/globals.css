@@ -1208,3 +1208,100 @@ img { display: block; width: 100%; }
 .reis-product-link span{margin-left:5px}
 @media(max-width:520px){.reis-product-body{padding:16px}.reis-product-body h2{font-size:25px}}
 @media(prefers-reduced-motion:reduce){.reis-product-photo img{transition:none}}
+
+
+/* REIS responsive rental catalogue refinement */
+.reis-product-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  align-items: stretch;
+}
+
+.reis-product-grid .reis-product-card {
+  min-width: 0;
+  border-color: #e6e1d8;
+}
+
+.reis-product-grid .reis-product-photo {
+  aspect-ratio: 1 / 1;
+}
+
+.reis-product-grid .reis-product-body {
+  padding: 12px;
+}
+
+.reis-product-grid .reis-product-body .eyebrow {
+  font-size: 9px;
+  letter-spacing: .09em;
+  line-height: 1.4;
+  margin-bottom: 7px;
+}
+
+.reis-product-grid .reis-product-body h2 {
+  font-size: clamp(17px, 2vw, 24px);
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+  margin-bottom: 8px;
+}
+
+.reis-product-grid .reis-product-description {
+  font-size: 11px;
+  line-height: 1.55;
+  margin-bottom: 14px;
+  -webkit-line-clamp: 3;
+}
+
+.reis-product-grid .reis-product-bottom {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-top: 11px;
+}
+
+.reis-product-grid .reis-product-price {
+  gap: 4px 6px;
+}
+
+.reis-product-grid .reis-product-price strong {
+  font-size: 15px;
+}
+
+.reis-product-grid .reis-product-link {
+  font-size: 9px;
+}
+
+@media (min-width: 700px) {
+  .reis-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 20px !important;
+  }
+
+  .reis-product-grid .reis-product-body {
+    padding: 16px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .reis-product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 22px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .reis-product-grid {
+    gap: 10px !important;
+  }
+
+  .reis-product-grid .reis-product-body {
+    padding: 9px;
+  }
+
+  .reis-product-grid .reis-product-body h2 {
+    font-size: 17px;
+  }
+
+  .reis-product-grid .reis-product-link {
+    font-size: 8px;
+  }
+}

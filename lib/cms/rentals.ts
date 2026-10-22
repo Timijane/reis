@@ -43,17 +43,51 @@ export async function getRental(id: string): Promise<Rental | null> {
 export async function getRentalBySlug(
   slug: string
 ): Promise<Rental | null> {
+  const value = slug.trim().toLowerCase();
+
+  if (!value) return null;
+
+  // Support direct Firestore document IDs.
+  const direct = await getDoc(doc(db, "products", slug));
+  if (direct.exists()) {
+    return {
+      id: direct.id,
+      ...(direct.data() as Omit<Rental, "id">),
+    };
+  }
+
+  // Prefer the exact stored slug.
   const snapshot = await getDocs(
     query(productsCollection, where("slug", "==", slug))
   );
 
   const match = snapshot.docs[0];
+  if (match) {
+    return {
+      id: match.id,
+      ...(match.data() as Omit<Rental, "id">),
+    };
+  }
 
-  if (!match) return null;
+  // Fallback for older products with missing or inconsistent slugs.
+  const allProducts = await getDocs(productsCollection);
+  const normalize = (text: string) =>
+    text.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+  const fallback = allProducts.docs.find((item) => {
+    const data = item.data();
+    return (
+      item.id === slug ||
+      normalize(String(data.slug || "")) === normalize(value) ||
+      normalize(String(data.name || "")) === normalize(value)
+    );
+  });
+
+  if (!fallback) return null;
 
   return {
-    id: match.id,
-    ...(match.data() as Omit<Rental, "id">),
+    id: fallback.id,
+    ...(fallback.data() as Omit<Rental, "id">),
   };
 }
 
