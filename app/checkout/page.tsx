@@ -13,26 +13,40 @@ export default function Checkout() {
     setBusy(true);
     setMsg('');
 
-    const fd = new FormData(e.currentTarget);
-    const items = JSON.parse(localStorage.getItem('reis-cart') || '[]');
-
-    const body = {
-      customer: {
-        name: fd.get('name'),
-        email: fd.get('email'),
-        phone: fd.get('phone'),
-        whatsapp: fd.get('whatsapp'),
-      },
-      event: {
-        date: fd.get('date'),
-        eventType: fd.get('eventType'),
-        venue: fd.get('venue'),
-        guestCount: Number(fd.get('guests') || 0),
-      },
-      items,
-    };
-
     try {
+      const fd = new FormData(e.currentTarget);
+      const storedCart = localStorage.getItem('reis-cart') || '[]';
+      const cart = JSON.parse(storedCart);
+
+      if (!Array.isArray(cart) || cart.length === 0) {
+        setMsg('Your basket is empty. Please select your rentals before continuing.');
+        return;
+      }
+
+      const items = cart.map((item: {
+        productId?: string;
+        quantity?: number;
+        eventDate?: string;
+        endDate?: string;
+        tentSize?: string;
+      }) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        eventDate: item.eventDate,
+        ...(item.endDate ? { endDate: item.endDate } : {}),
+        ...(item.tentSize ? { tentSize: item.tentSize } : {}),
+      }));
+
+      const body = {
+        customer: {
+          name: String(fd.get('name') || '').trim(),
+          email: String(fd.get('email') || '').trim(),
+          phone: String(fd.get('phone') || '').trim(),
+        },
+        event: {},
+        items,
+      };
+
       const res = await fetch('/api/booking/create', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -42,16 +56,22 @@ export default function Checkout() {
       const data = await res.json();
 
       if (!res.ok) {
-        setMsg(data.error || 'Unable to create your booking request. Please try again.');
+        setMsg(
+          data.error ||
+            'Unable to create your booking request. Please try again.'
+        );
         return;
       }
 
       localStorage.removeItem('reis-cart');
+
       router.push(
         `/booking/confirmation?reference=${encodeURIComponent(data.reference)}`
       );
     } catch {
-      setMsg('We could not connect to REIS. Please check your internet connection and try again.');
+      setMsg(
+        'We could not complete your request. Please check your internet connection and try again.'
+      );
     } finally {
       setBusy(false);
     }
@@ -66,7 +86,9 @@ export default function Checkout() {
             REIS EVENT SERVICES
           </div>
 
-          <p className="reis-checkout-kicker">LET&apos;S PLAN SOMETHING MEMORABLE</p>
+          <p className="reis-checkout-kicker">
+            YOUR RENTALS, ONE STEP CLOSER
+          </p>
 
           <h1>
             Your event.
@@ -75,8 +97,8 @@ export default function Checkout() {
           </h1>
 
           <p className="reis-checkout-intro">
-            Tell us a little about your occasion and the rentals you need.
-            We&apos;ll review your request and guide you through the next steps.
+            Share your contact details to submit your rental request.
+            We&apos;ll review availability and guide you through the next steps.
           </p>
         </header>
 
@@ -84,9 +106,13 @@ export default function Checkout() {
           <section className="reis-checkout-form-panel">
             <div className="reis-checkout-panel-heading">
               <div>
-                <span className="reis-checkout-step">BOOKING REQUEST · 01</span>
-                <h2>Tell us about your event</h2>
-                <p>Complete the details below to submit your request.</p>
+                <span className="reis-checkout-step">
+                  BOOKING REQUEST · 01
+                </span>
+                <h2>Your contact details</h2>
+                <p>
+                  Just three details to get your rental request started.
+                </p>
               </div>
 
               <span className="reis-checkout-heading-mark" aria-hidden="true">
@@ -101,9 +127,11 @@ export default function Checkout() {
                   Your details
                 </legend>
 
-                <div className="reis-checkout-fields reis-checkout-two-columns">
+                <div className="reis-checkout-fields">
                   <div className="reis-checkout-field">
-                    <label htmlFor="reis-name">Full name <span>*</span></label>
+                    <label htmlFor="reis-name">
+                      Full name <span>*</span>
+                    </label>
                     <input
                       id="reis-name"
                       name="name"
@@ -115,7 +143,9 @@ export default function Checkout() {
                   </div>
 
                   <div className="reis-checkout-field">
-                    <label htmlFor="reis-email">Email address <span>*</span></label>
+                    <label htmlFor="reis-email">
+                      Email address <span>*</span>
+                    </label>
                     <input
                       id="reis-email"
                       name="email"
@@ -127,7 +157,9 @@ export default function Checkout() {
                   </div>
 
                   <div className="reis-checkout-field">
-                    <label htmlFor="reis-phone">Phone number <span>*</span></label>
+                    <label htmlFor="reis-phone">
+                      Phone number <span>*</span>
+                    </label>
                     <input
                       id="reis-phone"
                       name="phone"
@@ -137,93 +169,23 @@ export default function Checkout() {
                       required
                     />
                   </div>
-
-                  <div className="reis-checkout-field">
-                    <label htmlFor="reis-whatsapp">
-                      WhatsApp number <small>OPTIONAL</small>
-                    </label>
-                    <input
-                      id="reis-whatsapp"
-                      name="whatsapp"
-                      type="tel"
-                      autoComplete="tel"
-                      placeholder="If different from your phone"
-                    />
-                  </div>
-                </div>
-              </fieldset>
-
-              <fieldset className="reis-checkout-fieldset">
-                <legend>
-                  <span className="reis-checkout-section-number">02</span>
-                  Event details
-                </legend>
-
-                <div className="reis-checkout-fields reis-checkout-two-columns">
-                  <div className="reis-checkout-field">
-                    <label htmlFor="reis-date">Event date <span>*</span></label>
-                    <input
-                      id="reis-date"
-                      name="date"
-                      type="date"
-                      required
-                    />
-                  </div>
-
-                  <div className="reis-checkout-field">
-                    <label htmlFor="reis-event-type">Type of event <span>*</span></label>
-                    <select id="reis-event-type" name="eventType" required defaultValue="">
-                      <option value="" disabled>Select your occasion</option>
-                      <option value="Wedding">Wedding</option>
-                      <option value="Birthday">Birthday celebration</option>
-                      <option value="Corporate event">Corporate event</option>
-                      <option value="Private party">Private party</option>
-                      <option value="Engagement">Engagement</option>
-                      <option value="Anniversary">Anniversary</option>
-                      <option value="Graduation">Graduation</option>
-                      <option value="Church event">Church event</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  <div className="reis-checkout-field reis-checkout-full-width">
-                    <label htmlFor="reis-guests">Expected number of guests</label>
-                    <input
-                      id="reis-guests"
-                      name="guests"
-                      type="number"
-                      min="0"
-                      step="1"
-                      placeholder="Approximately how many guests?"
-                    />
-                    <small className="reis-checkout-hint">
-                      This helps us understand the scale of your event.
-                    </small>
-                  </div>
-
-                  <div className="reis-checkout-field reis-checkout-full-width">
-                    <label htmlFor="reis-venue">Event venue or address <span>*</span></label>
-                    <textarea
-                      id="reis-venue"
-                      name="venue"
-                      rows={3}
-                      autoComplete="street-address"
-                      placeholder="Enter the venue name, address, town or postcode"
-                      required
-                    />
-                  </div>
                 </div>
               </fieldset>
 
               <div className="reis-checkout-hold-notice">
-                <span className="reis-checkout-notice-icon" aria-hidden="true">i</span>
+                <span
+                  className="reis-checkout-notice-icon"
+                  aria-hidden="true"
+                >
+                  i
+                </span>
                 <div>
                   <h3>Your 24-hour reservation hold</h3>
                   <p>
                     Submitting this request does not charge you. Your requested
-                    rental is temporarily held for 24 hours while REIS reviews
-                    your booking. If it is not approved and paid according to
-                    the final instructions within that period, the hold may
+                    rentals are temporarily held for 24 hours while REIS reviews
+                    your booking. If the booking is not approved and payment is
+                    not confirmed within the applicable period, the hold may
                     expire and the dates may become available again.
                   </p>
                 </div>
@@ -242,13 +204,15 @@ export default function Checkout() {
                   type="submit"
                   disabled={busy}
                 >
-                  <span>{busy ? 'Submitting your request…' : 'Submit booking request'}</span>
+                  <span>
+                    {busy ? 'Submitting your request…' : 'Submit booking request'}
+                  </span>
                   {!busy && <span aria-hidden="true">↗</span>}
                 </button>
 
                 <p>
-                  No payment is taken at this stage. Your booking remains subject
-                  to REIS review and approval.
+                  No payment is taken at this stage. Your booking remains
+                  subject to REIS review and approval.
                 </p>
               </div>
             </form>
@@ -256,11 +220,13 @@ export default function Checkout() {
 
           <aside className="reis-checkout-sidebar">
             <div className="reis-checkout-sidebar-top">
-              <span className="reis-checkout-sidebar-label">THE REIS EXPERIENCE</span>
+              <span className="reis-checkout-sidebar-label">
+                THE REIS EXPERIENCE
+              </span>
               <h2>Thoughtfully planned. Beautifully celebrated.</h2>
               <p>
-                We help you bring your occasion together with event rentals
-                and styling tailored to your plans.
+                Discover the right rentals for your occasion. We&apos;ll help
+                bring your setting together, one detail at a time.
               </p>
             </div>
 
@@ -271,7 +237,9 @@ export default function Checkout() {
                 <span>01</span>
                 <div>
                   <h4>Send your request</h4>
-                  <p>Tell us about your event and the rentals you have selected.</p>
+                  <p>
+                    Submit your contact details and selected rental items.
+                  </p>
                 </div>
               </div>
 
@@ -279,7 +247,9 @@ export default function Checkout() {
                 <span>02</span>
                 <div>
                   <h4>REIS reviews it</h4>
-                  <p>Our team checks your request and rental availability.</p>
+                  <p>
+                    Our team checks your request and rental availability.
+                  </p>
                 </div>
               </div>
 
@@ -287,7 +257,10 @@ export default function Checkout() {
                 <span>03</span>
                 <div>
                   <h4>Receive the next steps</h4>
-                  <p>If approved, follow the payment instructions provided for your booking.</p>
+                  <p>
+                    If approved, follow the payment instructions provided for
+                    your booking.
+                  </p>
                 </div>
               </div>
             </div>
