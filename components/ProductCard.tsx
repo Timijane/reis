@@ -5,12 +5,7 @@ import { activePromo, unitPrice } from "@/lib/pricing";
 export default function ProductCard({ p }: { p: Product }) {
   const promo = activePromo(p);
   const image = p.image || p.images?.[0];
-  const fallbackSlug = p.name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  const productSlug = p.slug || fallbackSlug || p.id;
+  const productSlug = p.id;
   const productHref =
     p.type === "tent"
       ? `/booking/tents/${productSlug}`

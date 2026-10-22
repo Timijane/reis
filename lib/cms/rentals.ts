@@ -24,8 +24,8 @@ export async function getRentals(): Promise<Rental[]> {
   );
 
   return snapshot.docs.map((item) => ({
-    id: item.id,
     ...(item.data() as Omit<Rental, "id">),
+    id: item.id,
   }));
 }
 
@@ -35,8 +35,8 @@ export async function getRental(id: string): Promise<Rental | null> {
   if (!snapshot.exists()) return null;
 
   return {
-    id: snapshot.id,
     ...(snapshot.data() as Omit<Rental, "id">),
+    id: snapshot.id,
   };
 }
 
@@ -51,8 +51,8 @@ export async function getRentalBySlug(
   const direct = await getDoc(doc(db, "products", slug));
   if (direct.exists()) {
     return {
-      id: direct.id,
       ...(direct.data() as Omit<Rental, "id">),
+      id: direct.id,
     };
   }
 
@@ -64,8 +64,8 @@ export async function getRentalBySlug(
   const match = snapshot.docs[0];
   if (match) {
     return {
-      id: match.id,
       ...(match.data() as Omit<Rental, "id">),
+      id: match.id,
     };
   }
 
@@ -86,8 +86,8 @@ export async function getRentalBySlug(
   if (!fallback) return null;
 
   return {
-    id: fallback.id,
     ...(fallback.data() as Omit<Rental, "id">),
+    id: fallback.id,
   };
 }
 
@@ -104,8 +104,8 @@ export async function getActiveProductsByType(
 
   return snapshot.docs
     .map((item) => ({
-      id: item.id,
       ...(item.data() as Omit<Rental, "id">),
+    id: item.id,
     }))
     .filter((product) => product.type === type);
 }
@@ -128,8 +128,8 @@ export async function getActiveProducts(): Promise<Rental[]> {
   );
 
   return snapshot.docs.map((item) => ({
-    id: item.id,
     ...(item.data() as Omit<Rental, "id">),
+    id: item.id,
   }));
 }
 

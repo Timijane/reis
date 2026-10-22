@@ -60,8 +60,16 @@ export default function RentalDetailPage({
           }
         }
       })
-      .catch(() => {
-        if (mounted) setProduct(null);
+      .catch((error: unknown) => {
+        console.error("[REIS rental detail] Failed to load product:", error);
+        if (mounted) {
+          setProduct(null);
+          setMessage(
+            error instanceof Error
+              ? error.message
+              : "An unknown error occurred while loading this rental."
+          );
+        }
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -91,6 +99,34 @@ export default function RentalDetailPage({
           <p className="muted">
             This item may have been removed or is no longer available.
           </p>
+          {message && (
+            <p
+              role="alert"
+              style={{
+                marginTop: 16,
+                padding: 12,
+                border: "1px solid #c8943e",
+                overflowWrap: "anywhere",
+                fontSize: 13,
+              }}
+            >
+              Diagnostic: {message}
+            </p>
+          )}
+          {message && (
+            <p
+              role="alert"
+              style={{
+                marginTop: 16,
+                padding: 12,
+                border: "1px solid #c8943e",
+                overflowWrap: "anywhere",
+                fontSize: 13,
+              }}
+            >
+              Diagnostic: {message}
+            </p>
+          )}
           <Link className="btn" href="/booking/rentals">
             Browse available rentals
           </Link>
