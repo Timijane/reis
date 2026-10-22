@@ -98,7 +98,7 @@ export default function Home() {
     return (
       <a
         className={`category-card card-${index + 1}`}
-        href={item.href || content.rentalsHref || "#contact"}
+        href="/shop"
         key={item.id}
       >
         {cardContent}
@@ -180,7 +180,7 @@ export default function Home() {
           <div className="hero-actions">
             <a
               className="button button-light"
-              href={content.heroPrimaryHref || "/explore"}
+              href="/shop"
             >
               {content.heroPrimaryCta}
             </a>

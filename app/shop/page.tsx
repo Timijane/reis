@@ -23,13 +23,13 @@ const shoppingPaths = [
   },
   {
     number: "03",
-    title: "Event Styling",
-    subtitle: "Your vision, thoughtfully brought to life.",
+    title: "Portfolio",
+    subtitle: "A glimpse of celebrations we've helped create.",
     description:
-      "Tell us about your occasion, your ideas and your venue. Our team will help you plan an event that feels uniquely yours.",
+      "Explore our event styling and previous work.",
     image: "/images/commerce-styling.jpg",
-    href: "/booking/styling",
-    action: "Discuss your event",
+    href: "/#work",
+    action: "Explore our work",
   },
 ];
 
@@ -101,34 +101,38 @@ export default function ShopPage() {
         </p>
       </section>
 
-      <section className="reis-shop-collections">
-        {shoppingPaths.map((item) => (
-          <article className="reis-shop-collection" key={item.number}>
-            <div className="reis-shop-collection-image">
-              <div className="reis-shop-image-placeholder">
-                <span>{item.number}</span>
-                <p>{item.title}</p>
-              </div>
-            </div>
+      <section className="reis-shop-triangle" aria-label="Explore REIS">
+        <div className="reis-shop-triangle-heading">
+          <span className="reis-shop-eyebrow">EXPLORE REIS</span>
+          <h2>Choose your experience.</h2>
+          <p>Select a circle to continue.</p>
+        </div>
 
-            <div className="reis-shop-collection-content">
-              <span className="reis-shop-eyebrow">
-                {item.subtitle}
-              </span>
+        <div className="reis-shop-triangle-diagram">
+          <svg
+            className="reis-shop-triangle-lines"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <line x1="50" y1="17" x2="25" y2="72" />
+            <line x1="50" y1="17" x2="75" y2="72" />
+            <line x1="25" y1="72" x2="75" y2="72" />
+          </svg>
 
-              <h3>{item.title}</h3>
-
-              <p>{item.description}</p>
-
-              <Link
-                href={item.href}
-                className="reis-shop-text-link"
-              >
-                {item.action} <span aria-hidden="true">↗</span>
-              </Link>
-            </div>
-          </article>
-        ))}
+          {shoppingPaths.map((item, index) => (
+            <Link
+              key={item.number}
+              href={item.href}
+              className={`reis-shop-triangle-node reis-shop-triangle-node-${index + 1}`}
+              aria-label={`Explore ${item.title}`}
+            >
+              <span className="reis-shop-node-number">{item.number}</span>
+              <span className="reis-shop-node-title">{item.title}</span>
+              <span className="reis-shop-node-arrow" aria-hidden="true">↗</span>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="reis-shop-closing">
@@ -451,7 +455,170 @@ export default function ShopPage() {
             transition: none;
           }
         }
-      `}</style>
+        .reis-shop-triangle {
+          padding: 38px 20px 76px;
+          overflow: hidden;
+        }
+
+        .reis-shop-triangle-heading {
+          text-align: center;
+          margin: 0 auto 20px;
+        }
+
+        .reis-shop-triangle-heading h2 {
+          margin: 12px 0 8px;
+          font-family: var(--serif, Georgia, serif);
+          font-size: clamp(30px, 4vw, 46px);
+          font-weight: 400;
+          letter-spacing: -0.035em;
+        }
+
+        .reis-shop-triangle-heading p {
+          margin: 0;
+          color: var(--shop-muted);
+          font-size: 14px;
+        }
+
+        .reis-shop-triangle-diagram {
+          position: relative;
+          width: min(100%, 820px);
+          height: clamp(350px, 43vw, 460px);
+          margin: 0 auto;
+        }
+
+        .reis-shop-triangle-lines {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          overflow: visible;
+          pointer-events: none;
+        }
+
+        .reis-shop-triangle-lines line {
+          stroke: var(--shop-accent);
+          stroke-width: 0.35;
+          vector-effect: non-scaling-stroke;
+          opacity: 0.8;
+        }
+
+        .reis-shop-triangle-node {
+          position: absolute;
+          z-index: 1;
+          width: clamp(108px, 18vw, 158px);
+          aspect-ratio: 1;
+          border: 1px solid var(--shop-accent);
+          border-radius: 50%;
+          background: var(--shop-paper);
+          color: var(--shop-ink);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          padding: 12px;
+          text-align: center;
+          text-decoration: none;
+          box-shadow: 0 8px 24px rgb(22 22 20 / 7%);
+          transition: background 180ms ease, color 180ms ease,
+            transform 180ms ease, box-shadow 180ms ease;
+        }
+
+        .reis-shop-triangle-node-1 {
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+
+        .reis-shop-triangle-node-2 {
+          top: 55%;
+          left: 25%;
+          transform: translate(-50%, -50%);
+        }
+
+        .reis-shop-triangle-node-3 {
+          top: 55%;
+          left: 75%;
+          transform: translate(-50%, -50%);
+        }
+
+        .reis-shop-node-number {
+          font-size: 10px;
+          letter-spacing: 0.16em;
+          color: var(--shop-accent);
+        }
+
+        .reis-shop-node-title {
+          max-width: 120px;
+          font-family: var(--serif, Georgia, serif);
+          font-size: clamp(14px, 1.8vw, 19px);
+          line-height: 1.15;
+        }
+
+        .reis-shop-node-arrow {
+          font-size: 16px;
+          line-height: 1;
+          color: var(--shop-accent);
+        }
+
+        .reis-shop-triangle-node:hover,
+        .reis-shop-triangle-node:focus-visible {
+          background: var(--shop-accent);
+          color: #fff;
+          box-shadow: 0 14px 30px rgb(22 22 20 / 14%);
+        }
+
+        .reis-shop-triangle-node:hover .reis-shop-node-number,
+        .reis-shop-triangle-node:hover .reis-shop-node-arrow,
+        .reis-shop-triangle-node:focus-visible .reis-shop-node-number,
+        .reis-shop-triangle-node:focus-visible .reis-shop-node-arrow {
+          color: #fff;
+        }
+
+        .reis-shop-triangle-node-1:hover,
+        .reis-shop-triangle-node-1:focus-visible {
+          transform: translateX(-50%) scale(1.04);
+        }
+
+        .reis-shop-triangle-node-2:hover,
+        .reis-shop-triangle-node-2:focus-visible,
+        .reis-shop-triangle-node-3:hover,
+        .reis-shop-triangle-node-3:focus-visible {
+          transform: translate(-50%, -50%) scale(1.04);
+        }
+
+        @media (max-width: 480px) {
+          .reis-shop-triangle {
+            padding: 28px 12px 48px;
+          }
+
+          .reis-shop-triangle-diagram {
+            height: 340px;
+          }
+
+          .reis-shop-triangle-node {
+            width: clamp(100px, 31vw, 124px);
+            padding: 9px;
+            gap: 6px;
+          }
+
+          .reis-shop-node-title {
+            font-size: 14px;
+          }
+
+          .reis-shop-triangle-node-2,
+          .reis-shop-triangle-node-3 {
+            top: 57%;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .reis-shop-triangle-node {
+            transition: none;
+          }
+        }
+      `}
+      </style>
     </main>
   );
 }
