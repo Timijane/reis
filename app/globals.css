@@ -1305,3 +1305,638 @@ img { display: block; width: 100%; }
     font-size: 8px;
   }
 }
+
+/* =========================================================
+   REIS CHECKOUT — PREMIUM EDITORIAL BOOKING EXPERIENCE
+   ========================================================= */
+
+.reis-checkout-page {
+  --reis-ink: #292b25;
+  --reis-muted: #77796f;
+  --reis-paper: #f7f6f1;
+  --reis-white: #ffffff;
+  --reis-olive: #68745a;
+  --reis-line: #e5e2d8;
+  background: var(--reis-paper);
+  color: var(--reis-ink);
+  min-height: 100vh;
+  padding: 56px 22px 84px;
+}
+
+.reis-checkout-container {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.reis-checkout-header {
+  max-width: 760px;
+  margin: 0 auto 46px;
+  text-align: center;
+}
+
+.reis-checkout-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  color: var(--reis-olive);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .2em;
+}
+
+.reis-checkout-eyebrow-line {
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: var(--reis-olive);
+}
+
+.reis-checkout-kicker {
+  margin: 30px 0 13px;
+  color: #8b8a7c;
+  font-size: 10px;
+  letter-spacing: .17em;
+  font-weight: 600;
+}
+
+.reis-checkout-header h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(38px, 5.4vw, 66px);
+  font-weight: 400;
+  letter-spacing: -.045em;
+  line-height: 1.06;
+}
+
+.reis-checkout-header h1 span {
+  color: var(--reis-olive);
+  font-style: italic;
+}
+
+.reis-checkout-intro {
+  max-width: 540px;
+  margin: 20px auto 0;
+  color: var(--reis-muted);
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.reis-checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  align-items: start;
+  gap: 25px;
+}
+
+.reis-checkout-form-panel {
+  min-width: 0;
+  padding: 34px;
+  background: var(--reis-white);
+  border: 1px solid var(--reis-line);
+}
+
+.reis-checkout-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--reis-line);
+}
+
+.reis-checkout-step {
+  color: var(--reis-olive);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.reis-checkout-panel-heading h2 {
+  margin: 10px 0 7px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+
+.reis-checkout-panel-heading p {
+  margin: 0;
+  color: var(--reis-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.reis-checkout-heading-mark {
+  flex-shrink: 0;
+  padding-top: 3px;
+  color: #b5b4a8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  letter-spacing: .12em;
+}
+
+.reis-checkout-form {
+  padding-top: 7px;
+}
+
+.reis-checkout-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 25px 0 28px;
+  border: 0;
+  border-bottom: 1px solid var(--reis-line);
+}
+
+.reis-checkout-fieldset legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 22px;
+  color: var(--reis-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 400;
+}
+
+.reis-checkout-section-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 29px;
+  height: 29px;
+  flex-shrink: 0;
+  border: 1px solid #d9ddcf;
+  border-radius: 50%;
+  color: var(--reis-olive);
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+}
+
+.reis-checkout-fields {
+  display: grid;
+  gap: 21px 18px;
+}
+
+.reis-checkout-two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.reis-checkout-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 9px;
+}
+
+.reis-checkout-full-width {
+  grid-column: 1 / -1;
+}
+
+.reis-checkout-field label {
+  color: #414239;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.reis-checkout-field label > span {
+  color: #a16e44;
+}
+
+.reis-checkout-field label small {
+  margin-left: 5px;
+  color: #96978d;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .08em;
+}
+
+.reis-checkout-field input,
+.reis-checkout-field select,
+.reis-checkout-field textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px 13px;
+  border: 1px solid #dfded5;
+  border-radius: 0;
+  outline: none;
+  background: #fdfdfb;
+  color: var(--reis-ink);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.reis-checkout-field textarea {
+  min-height: 94px;
+  resize: vertical;
+}
+
+.reis-checkout-field input::placeholder,
+.reis-checkout-field textarea::placeholder {
+  color: #a2a197;
+  opacity: 1;
+}
+
+.reis-checkout-field input:focus,
+.reis-checkout-field select:focus,
+.reis-checkout-field textarea:focus {
+  border-color: var(--reis-olive);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(104 116 90 / 10%);
+}
+
+.reis-checkout-field input:focus-visible,
+.reis-checkout-field select:focus-visible,
+.reis-checkout-field textarea:focus-visible {
+  outline: 1px solid var(--reis-olive);
+  outline-offset: 2px;
+}
+
+.reis-checkout-hint {
+  margin-top: -2px;
+  color: var(--reis-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.reis-checkout-hold-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 25px;
+  padding: 19px;
+  border: 1px solid #dce0d3;
+  background: #f5f6f0;
+}
+
+.reis-checkout-notice-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #b9c2ad;
+  border-radius: 50%;
+  color: var(--reis-olive);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+}
+
+.reis-checkout-hold-notice h3 {
+  margin: 1px 0 7px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reis-checkout-hold-notice p {
+  margin: 0;
+  color: #66695e;
+  font-size: 11px;
+  line-height: 1.85;
+}
+
+.reis-checkout-error {
+  margin-top: 20px;
+  padding: 15px 17px;
+  border: 1px solid #d9aaa3;
+  background: #fff7f5;
+  color: #843b32;
+}
+
+.reis-checkout-error strong {
+  font-size: 12px;
+}
+
+.reis-checkout-error p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.reis-checkout-submit-area {
+  padding-top: 25px;
+}
+
+.reis-checkout-submit {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  min-height: 54px;
+  padding: 15px 19px;
+  border: 1px solid var(--reis-ink);
+  border-radius: 0;
+  background: var(--reis-ink);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.reis-checkout-submit:hover:not(:disabled) {
+  border-color: var(--reis-olive);
+  background: var(--reis-olive);
+}
+
+.reis-checkout-submit:focus-visible {
+  outline: 2px solid var(--reis-olive);
+  outline-offset: 3px;
+}
+
+.reis-checkout-submit:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.reis-checkout-submit > span:last-child {
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.reis-checkout-submit-area > p {
+  margin: 12px 0 0;
+  color: var(--reis-muted);
+  font-size: 10px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+/* Booking process sidebar */
+
+.reis-checkout-sidebar {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+  padding: 27px 23px 22px;
+  background: #eaece3;
+  border: 1px solid #e0e2d8;
+}
+
+.reis-checkout-sidebar-label {
+  color: var(--reis-olive);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .15em;
+}
+
+.reis-checkout-sidebar-top h2 {
+  margin: 17px 0 12px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 29px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -.035em;
+}
+
+.reis-checkout-sidebar-top > p {
+  margin: 0;
+  color: #66695f;
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.reis-checkout-process {
+  margin-top: 30px;
+  padding-top: 23px;
+  border-top: 1px solid #d3d7c9;
+}
+
+.reis-checkout-process > h3 {
+  margin: 0 0 22px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 19px;
+  font-weight: 400;
+}
+
+.reis-checkout-process-item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+  padding: 0 0 22px;
+}
+
+.reis-checkout-process-item:last-child {
+  padding-bottom: 0;
+}
+
+.reis-checkout-process-item > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  border: 1px solid #b9c2ad;
+  border-radius: 50%;
+  color: var(--reis-olive);
+  font-size: 9px;
+}
+
+.reis-checkout-process-item h4 {
+  margin: 3px 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reis-checkout-process-item p {
+  margin: 0;
+  color: #686b61;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.reis-checkout-sidebar-footer {
+  position: relative;
+  margin-top: 28px;
+  padding-top: 19px;
+  border-top: 1px solid #d3d7c9;
+}
+
+.reis-checkout-footer-rule {
+  display: block;
+  width: 29px;
+  height: 2px;
+  margin-bottom: 12px;
+  background: var(--reis-olive);
+}
+
+.reis-checkout-sidebar-footer > p {
+  max-width: 175px;
+  margin: 0;
+  color: #777a6d;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  line-height: 1.8;
+}
+
+.reis-checkout-footer-brand {
+  display: block;
+  margin-top: 15px;
+  color: var(--reis-olive);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 27px;
+  letter-spacing: .1em;
+}
+
+@media (min-width: 1200px) {
+  .reis-checkout-layout {
+    grid-template-columns: minmax(0, 1fr) 325px;
+    gap: 30px;
+  }
+
+  .reis-checkout-form-panel {
+    padding: 38px;
+  }
+
+  .reis-checkout-sidebar {
+    padding: 30px 26px 24px;
+  }
+}
+
+@media (max-width: 850px) {
+  .reis-checkout-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .reis-checkout-sidebar {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 25px;
+  }
+
+  .reis-checkout-process {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .reis-checkout-sidebar-footer {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .reis-checkout-page {
+    padding: 34px 13px 50px;
+  }
+
+  .reis-checkout-header {
+    margin-bottom: 28px;
+  }
+
+  .reis-checkout-kicker {
+    margin-top: 24px;
+    font-size: 9px;
+  }
+
+  .reis-checkout-header h1 {
+    font-size: clamp(36px, 10vw, 49px);
+  }
+
+  .reis-checkout-intro {
+    margin-top: 15px;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .reis-checkout-form-panel {
+    padding: 22px 16px;
+  }
+
+  .reis-checkout-panel-heading {
+    padding-bottom: 22px;
+    gap: 10px;
+  }
+
+  .reis-checkout-panel-heading h2 {
+    font-size: 25px;
+  }
+
+  .reis-checkout-panel-heading p {
+    font-size: 11px;
+  }
+
+  .reis-checkout-heading-mark {
+    font-size: 13px;
+  }
+
+  .reis-checkout-fieldset {
+    padding: 23px 0;
+  }
+
+  .reis-checkout-fieldset legend {
+    margin-bottom: 19px;
+    font-size: 20px;
+  }
+
+  .reis-checkout-two-columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .reis-checkout-full-width {
+    grid-column: auto;
+  }
+
+  .reis-checkout-field input,
+  .reis-checkout-field select,
+  .reis-checkout-field textarea {
+    min-height: 47px;
+    font-size: 13px;
+  }
+
+  .reis-checkout-hold-notice {
+    gap: 11px;
+    padding: 15px 12px;
+  }
+
+  .reis-checkout-hold-notice p {
+    font-size: 10px;
+  }
+
+  .reis-checkout-sidebar {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 24px 20px;
+  }
+
+  .reis-checkout-sidebar-top h2 {
+    max-width: 320px;
+    font-size: 28px;
+  }
+
+  .reis-checkout-process {
+    padding-top: 22px;
+    border-top: 1px solid #d3d7c9;
+  }
+
+  .reis-checkout-sidebar-footer {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reis-checkout-field input,
+  .reis-checkout-field select,
+  .reis-checkout-field textarea,
+  .reis-checkout-submit {
+    transition: none;
+  }
+}
