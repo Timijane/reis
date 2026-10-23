@@ -1,19 +1,53 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getHomepageContent } from "@/lib/cms/homepage";
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+  userChoice: Promise<{
+    outcome: "accepted" | "dismissed";
+    platform: string;
+  }>;
 };
 
 const DISMISSED_KEY = "reis-install-prompt-dismissed";
 
 export default function InstallPrompt() {
-  const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null);
+  const [installEvent, setInstallEvent] =
+    useState<InstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [ios, setIos] = useState(false);
   const [instructions, setInstructions] = useState(false);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [brandName, setBrandName] = useState("REIS Event Services");
+  const [installed, setInstalled] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [installing, setInstalling] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    getHomepageContent()
+      .then((content) => {
+        if (!active) return;
+        setLogoUrl(
+          typeof content.logoUrl === "string" ? content.logoUrl.trim() : ""
+        );
+        setBrandName(
+          typeof content.brandName === "string" && content.brandName.trim()
+            ? content.brandName.trim()
+            : "REIS Event Services"
+        );
+      })
+      .catch((error) => {
+        console.error("Failed to load REIS CMS logo for install prompt:", error);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const standalone = () =>
@@ -46,8 +80,21 @@ export default function InstallPrompt() {
     };
 
     const onInstalled = () => {
-      setVisible(false);
+      setInstalled(true);
+      setInstalling(false);
       setInstallEvent(null);
+      setInstructions(false);
+      setStatusMessage(
+        "REIS has been installed successfully. You can open it from your home screen."
+      );
+
+      try {
+        window.localStorage.setItem(DISMISSED_KEY, "1");
+      } catch {
+        // Installation confirmation still works without storage.
+      }
+
+      setVisible(true);
     };
 
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
@@ -64,25 +111,46 @@ export default function InstallPrompt() {
 
   function dismiss() {
     setVisible(false);
+
     try {
       window.localStorage.setItem(DISMISSED_KEY, "1");
     } catch {
-      // Dismiss for this session even if storage is unavailable.
+      // Dismiss for this session even if browser storage is unavailable.
     }
   }
 
   async function install() {
+    setStatusMessage("");
+
     if (!installEvent) {
       setInstructions(true);
       return;
     }
 
-    await installEvent.prompt();
-    const choice = await installEvent.userChoice;
+    try {
+      setInstalling(true);
+      await installEvent.prompt();
 
-    if (choice.outcome === "accepted") {
-      setVisible(false);
+      const choice = await installEvent.userChoice;
       setInstallEvent(null);
+      setInstalling(false);
+
+      if (choice.outcome === "accepted") {
+        setInstructions(false);
+        setStatusMessage(
+          "Your browser accepted the installation request. Check your home screen in a moment."
+        );
+      } else {
+        setStatusMessage(
+          "Installation was cancelled. You can try again from your browser menu."
+        );
+      }
+    } catch (error) {
+      console.error("REIS installation prompt failed:", error);
+      setInstalling(false);
+      setStatusMessage(
+        "Installation could not start. Open your browser menu and look for an installation option."
+      );
     }
   }
 
@@ -99,24 +167,39 @@ export default function InstallPrompt() {
         type="button"
         className="reis-install__close"
         onClick={dismiss}
-        aria-label="Dismiss installation prompt"
+        aria-label="Close installation prompt"
       >
         ×
       </button>
 
-      <div className="reis-install__mark" aria-hidden="true">
-        RIS
+      <div className="reis-install__mark">
+        {logoUrl ? (
+          <img
+            className="reis-install__logo"
+            src={logoUrl}
+            alt={`${brandName} logo`}
+          />
+        ) : (
+          <span aria-hidden="true">RIS</span>
+        )}
       </div>
 
       <div className="reis-install__copy">
         <p className="reis-install__eyebrow">TAKE REIS WITH YOU</p>
-        <h2 id="reis-install-title">A better way to plan your event.</h2>
+
+        <h2 id="reis-install-title">
+          {installed
+            ? "REIS is ready."
+            : "A better way to plan your event."}
+        </h2>
+
         <p>
-          Add REIS Event Services to your home screen for convenient access to
-          our rentals, styling and booking services.
+          {installed
+            ? "Installation is complete. Open REIS Event Services from your home screen whenever you need our services."
+            : "Add REIS Event Services to your home screen for convenient access to our rentals, styling and booking services."}
         </p>
 
-        {instructions && (
+        {instructions && !installed && (
           <p className="reis-install__instructions" role="status">
             {ios
               ? 'In Safari, tap Share, then choose "Add to Home Screen".'
@@ -124,20 +207,34 @@ export default function InstallPrompt() {
           </p>
         )}
 
+        {statusMessage && (
+          <p className="reis-install__status" role="status">
+            {statusMessage}
+          </p>
+        )}
+
         <div className="reis-install__actions">
-          <button
-            type="button"
-            className="reis-install__primary"
-            onClick={install}
-          >
-            Install REIS
-          </button>
+          {!installed && (
+            <button
+              type="button"
+              className="reis-install__primary"
+              onClick={install}
+              disabled={installing}
+            >
+              {installing
+                ? "Opening installer..."
+                : instructions
+                  ? "Try installation again"
+                  : "Install REIS"}
+            </button>
+          )}
+
           <button
             type="button"
             className="reis-install__secondary"
             onClick={dismiss}
           >
-            Maybe later
+            {installed ? "Close" : "Maybe later"}
           </button>
         </div>
       </div>
@@ -176,11 +273,19 @@ export default function InstallPrompt() {
           place-items: center;
           width: 56px;
           height: 56px;
+          overflow: hidden;
           background: #354737;
           color: #f7f4ed;
           font-family: Georgia, serif;
           font-size: 19px;
           letter-spacing: 1px;
+        }
+
+        .reis-install__logo {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
         }
 
         .reis-install__eyebrow {
@@ -204,9 +309,11 @@ export default function InstallPrompt() {
           color: #62635b;
           font-size: 13px;
           line-height: 1.65;
+          overflow-wrap: anywhere;
         }
 
-        .reis-install__copy .reis-install__instructions {
+        .reis-install__copy .reis-install__instructions,
+        .reis-install__copy .reis-install__status {
           padding: 10px;
           border-left: 2px solid #596b51;
           background: #eeeadf;
@@ -232,6 +339,11 @@ export default function InstallPrompt() {
           border: 1px solid #354737;
           background: #354737;
           color: #fff;
+        }
+
+        .reis-install__primary:disabled {
+          cursor: wait;
+          opacity: 0.7;
         }
 
         .reis-install__secondary {
