@@ -338,7 +338,17 @@ function StatusBadge({ value }: { value?: string }) {
   );
 }
 
-function BookingCard({ booking }: { booking: B }) {
+function BookingCard({
+  booking,
+  onApprove,
+  approving,
+  feedback,
+}: {
+  booking: B;
+  onApprove: (booking: B) => void;
+  approving: boolean;
+  feedback?: { type: 'success' | 'error'; text: string };
+}) {
   const [copied, setCopied] = useState(false);
 
   const items = Array.isArray(booking.items) ? booking.items : [];
@@ -530,6 +540,43 @@ function BookingCard({ booking }: { booking: B }) {
           {booking.paymentCode}
         </div>
       )}
+      {booking.status === 'pending_review' &&
+        booking.reservationStatus !== 'expired' && (
+          <div style={{ marginTop: 22 }}>
+            <button
+              type="button"
+              onClick={() => onApprove(booking)}
+              disabled={approving}
+              style={{
+                padding: '12px 18px',
+                border: '1px solid #354737',
+                background: approving ? '#e5e7e0' : '#354737',
+                color: approving ? '#5e665a' : '#fff',
+                fontSize: 13,
+                fontWeight: 650,
+                cursor: approving ? 'wait' : 'pointer',
+              }}
+            >
+              {approving ? 'Approving…' : 'Approve booking'}
+            </button>
+          </div>
+        )}
+
+      {feedback && (
+        <div
+          role={feedback.type === 'error' ? 'alert' : 'status'}
+          style={{
+            ...styles.notice,
+            marginTop: 14,
+            marginBottom: 0,
+            background: feedback.type === 'error' ? '#f8eae7' : '#f0f2ec',
+            borderColor: feedback.type === 'error' ? '#e9d0ca' : '#dce2d7',
+            color: feedback.type === 'error' ? '#87473d' : '#3e4d3b',
+          }}
+        >
+          {feedback.text}
+        </div>
+      )}
     </article>
   );
 }
@@ -541,6 +588,10 @@ export default function Bookings() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [approvingId, setApprovingId] = useState('');
+  const [actionFeedback, setActionFeedback] = useState<
+    Record<string, { type: 'success' | 'error'; text: string }>
+  >({});
 
   async function loadBookings(
     user: import('firebase/auth').User,
@@ -594,6 +645,71 @@ export default function Bookings() {
 
     return () => unsubscribe();
   }, []);
+
+  async function approveBooking(booking: B) {
+    const user = auth.currentUser;
+
+    if (!user) {
+      setActionFeedback((previous) => ({
+        ...previous,
+        [booking.id]: {
+          type: 'error',
+          text: 'Your admin session has expired. Sign in again.',
+        },
+      }));
+      return;
+    }
+
+    setApprovingId(booking.id);
+    setActionFeedback((previous) => {
+      const next = { ...previous };
+      delete next[booking.id];
+      return next;
+    });
+
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('/api/booking/approve', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reference: booking.reference || booking.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Unable to approve this booking.');
+      }
+
+      setActionFeedback((previous) => ({
+        ...previous,
+        [booking.id]: {
+          type: 'success',
+          text: `Booking approved. Payment authorization code: ${data.paymentCode}`,
+        },
+      }));
+
+      await loadBookings(user, true);
+    } catch (error) {
+      setActionFeedback((previous) => ({
+        ...previous,
+        [booking.id]: {
+          type: 'error',
+          text:
+            error instanceof Error
+              ? error.message
+              : 'Unable to approve this booking.',
+        },
+      }));
+    } finally {
+      setApprovingId('');
+    }
+  }
 
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -797,14 +913,19 @@ export default function Bookings() {
           {!loading &&
             !error &&
             filteredItems.map((booking) => (
-              <BookingCard key={booking.id} booking={booking} />
+              <BookingCard
+                key={booking.id}
+                booking={booking}
+                onApprove={approveBooking}
+                approving={approvingId === booking.id}
+                feedback={actionFeedback[booking.id]}
+              />
             ))}
         </section>
 
         <p style={{ ...styles.muted, fontSize: 12 }}>
-          This page displays booking information returned by the existing
-          admin API. It does not approve bookings, change payment statuses,
-          or issue payment codes.
+          Approving a booking confirms the reservation and issues a payment
+          authorization code. Payment remains unpaid until receipt is verified.
         </p>
       </div>
     </main>
