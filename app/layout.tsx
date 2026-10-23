@@ -1,11 +1,22 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import InstallPrompt from "@/components/InstallPrompt";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Reis Invent Service | Event Rentals & Styling",
   description:
     "We style your event, You create memories! Premium event rentals and styling.",
+  applicationName: "REIS Event Services",
+  appleWebApp: {
+    capable: true,
+    title: "REIS",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -15,6 +26,7 @@ export default function RootLayout({
     <html lang="en-GB">
       <body>
         {children}
+        <InstallPrompt />
         <Script
           src="https://upload-widget.cloudinary.com/global/all.js"
           strategy="afterInteractive"

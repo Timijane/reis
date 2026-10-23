@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="88" fill="#354737"/>
+  <rect x="26" y="26" width="460" height="460" rx="68" fill="none" stroke="#d8c7a3" stroke-width="3"/>
+  <text x="256" y="244" text-anchor="middle" font-family="Georgia,serif" font-size="142" fill="#f7f4ed" letter-spacing="2">RIS</text>
+  <path d="M116 286H396" stroke="#d8c7a3" stroke-width="3"/>
+  <text x="256" y="330" text-anchor="middle" font-family="Arial,sans-serif" font-size="23" letter-spacing="5" fill="#f7f4ed">EVENT SERVICES</text>
+</svg>
