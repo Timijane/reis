@@ -4,6 +4,7 @@ import { bookingReference, holdUntil } from '@/lib/refs';
 import { calculate, unitPrice, validateQuantity } from '@/lib/pricing';
 import { assertAvailability } from '@/lib/availability';
 import type { Booking, Product } from '@/types/booking';
+import { verifyCustomerToken } from '@/lib/customer/server-auth';
 
 interface BookingRequestItem {
   productId: string;
@@ -54,6 +55,15 @@ function validDate(value: string) {
 }
 
 export async function POST(req: Request) {
+  const identity = await verifyCustomerToken(req);
+
+  if (!identity?.uid || !identity.email) {
+    return NextResponse.json(
+      { error: 'Please sign in to submit a booking request.' },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = (await req.json()) as BookingRequestBody;
     const customer = body.customer;
@@ -70,6 +80,16 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: 'Please provide your name, email, phone number and booking items.' },
         { status: 400 }
+      );
+    }
+
+    if (
+      customer.email.trim().toLowerCase() !==
+      identity.email.trim().toLowerCase()
+    ) {
+      return NextResponse.json(
+        { error: 'Your booking email must match your signed-in account.' },
+        { status: 403 }
       );
     }
 
@@ -201,11 +221,11 @@ export async function POST(req: Request) {
     const booking: Booking = {
       id: reference,
       reference,
-
-      customerEmailNormalized: customer.email.trim().toLowerCase(),
+      customerUid: identity.uid,
+      customerEmailNormalized: identity.email.trim().toLowerCase(),
       customer: {
         name: customer.name.trim(),
-        email: customer.email.trim(),
+        email: identity.email.trim(),
         phone: customer.phone.trim(),
         ...(customer.whatsapp?.trim()
           ? { whatsapp: customer.whatsapp.trim() }

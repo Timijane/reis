@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { auth } from "@/lib/firebase";
 
 const CLOUD_NAME = "dmbjrohtn";
 const UPLOAD_PRESET = "pelumi";
@@ -101,9 +102,20 @@ export default function Styling() {
         inspirationImages,
       };
 
+      const user = auth.currentUser;
+
+      if (!user) {
+        throw new Error("Please sign in before submitting your styling enquiry.");
+      }
+
+      const idToken = await user.getIdToken();
+
       const response = await fetch("/api/styling-enquiry", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
         body: JSON.stringify(payload),
       });
 

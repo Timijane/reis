@@ -1,7 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  onAuthStateChanged,
+  signOut as firebaseSignOut,
+  type User,
+} from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 interface OrderItem {
   name: string;
@@ -13,23 +19,26 @@ interface OrderItem {
 }
 
 interface CustomerOrder {
+  type: 'booking' | 'styling_enquiry';
   reference: string;
   createdAt: string;
   status: string;
-  reservationStatus: string;
-  paymentStatus: string;
-  fulfilmentStatus: string;
-  paymentVerifiedAt: string;
+  reservationStatus?: string;
+  paymentStatus?: string;
+  fulfilmentStatus?: string;
+  paymentVerifiedAt?: string;
   event: {
     date: string;
     endDate: string;
     eventType: string;
+    venue?: string;
   };
-  items: OrderItem[];
-  subtotal: number;
-  discount: number;
-  deliveryFee: number;
-  total: number;
+  items?: OrderItem[];
+  subtotal?: number;
+  discount?: number;
+  deliveryFee?: number;
+  total?: number;
+  description?: string;
 }
 
 function formatDate(value: string) {
@@ -54,6 +63,18 @@ function formatMoney(value: number) {
 }
 
 function orderStatus(order: CustomerOrder) {
+  if (order.type === 'styling_enquiry') {
+    if (order.status === 'completed') {
+      return { label: 'Completed', type: 'success' };
+    }
+
+    if (['cancelled', 'rejected'].includes(order.status)) {
+      return { label: 'Closed', type: 'muted' };
+    }
+
+    return { label: 'Enquiry received', type: 'warning' };
+  }
+
   if (
     order.status === 'cancelled' ||
     order.reservationStatus === 'expired' ||
@@ -76,8 +97,8 @@ function orderStatus(order: CustomerOrder) {
   if (
     order.status === 'in_fulfilment' ||
     ['out_for_delivery', 'delivered', 'collected', 'returned'].includes(
-      order.fulfilmentStatus,
-    )
+        order.fulfilmentStatus ?? '',
+      )
   ) {
     return { label: 'In fulfilment', type: 'success' };
   }
@@ -98,30 +119,34 @@ function orderStatus(order: CustomerOrder) {
 }
 
 export default function OrdersPage() {
-  const [email, setEmail] = useState('');
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [verified, setVerified] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(true);
-  const [sendingLink, setSendingLink] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  async function loadOrders() {
+  async function loadOrders(user: User) {
     setLoadingOrders(true);
 
     try {
+      const idToken = await user.getIdToken();
+
       const response = await fetch('/api/customer/orders', {
         method: 'GET',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
         cache: 'no-store',
       });
+
+      const data = await response.json();
 
       if (response.status === 401) {
         setVerified(false);
         setOrders([]);
+        setError('Your session has expired. Please sign in again.');
         return;
       }
-
-      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || 'Unable to load your orders.');
@@ -129,6 +154,7 @@ export default function OrdersPage() {
 
       setOrders(Array.isArray(data.orders) ? data.orders : []);
       setVerified(true);
+      setError('');
     } catch {
       setError('We could not load your orders. Please try again.');
     } finally {
@@ -140,61 +166,33 @@ export default function OrdersPage() {
     const params = new URLSearchParams(window.location.search);
 
     if (params.get('access') === 'invalid') {
-      setError(
-        'That access link is invalid, expired, or has already been used. Request a new link below.',
-      );
+      setError('That access link is invalid or expired. Please sign in to your account.');
     } else if (params.get('access') === 'error') {
-      setError('We could not verify that link. Please request another one.');
+      setError('We could not verify that link. Please sign in to your account.');
     }
 
-    void loadOrders();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        void loadOrders(user);
+      } else {
+        setVerified(false);
+        setOrders([]);
+        setLoadingOrders(false);
+      }
+    });
+
+    return unsubscribe;
   }, []);
 
-  async function requestAccess(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError('');
-    setMessage('');
-    setSendingLink(true);
-
-    try {
-      const response = await fetch('/api/customer/orders/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.error || 'Unable to send the verification email.',
-        );
-      }
-
-      setMessage(
-        data.message ||
-          'If an order exists for that email, a secure access link will be sent shortly.',
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Unable to send your access link. Please try again.',
-      );
-    } finally {
-      setSendingLink(false);
-    }
-  }
-
   async function signOut() {
-    // The session is stored in an HTTP-only cookie. Expire it through the API.
     try {
-      await fetch('/api/customer/orders/session', { method: 'DELETE' });
-    } finally {
+      await firebaseSignOut(auth);
       setVerified(false);
       setOrders([]);
       setMessage('');
       setError('');
+    } catch {
+      setError('Unable to sign out. Please try again.');
     }
   }
 
@@ -218,9 +216,8 @@ export default function OrdersPage() {
           <em>in one place.</em>
         </h1>
         <p>
-          Revisit your bookings, check their progress, and keep track of
-          previous celebrations. Use the email address you supplied when
-          placing your order.
+          Revisit your bookings, follow their progress, and review your
+          styling enquiries. Sign in to your REIS account to see your history.
         </p>
       </section>
 
@@ -253,7 +250,7 @@ export default function OrdersPage() {
               </span>
               <h3>No order history yet.</h3>
               <p>
-                You don’t have any bookings associated with this email
+                You don’t have any bookings or styling enquiries in this account
                 address. When you place an order, you’ll be able to follow
                 its progress here.
               </p>
@@ -280,7 +277,7 @@ export default function OrdersPage() {
                       <div className="order-card-top">
                         <div>
                           <span className="order-reference-label">
-                            BOOKING REFERENCE
+                            {order.type === 'booking' ? 'BOOKING REFERENCE' : 'STYLING REFERENCE'}
                           </span>
                           <h3>{order.reference}</h3>
                         </div>
@@ -307,32 +304,48 @@ export default function OrdersPage() {
                           </strong>
                         </div>
 
-                        <div>
-                          <span>Payment</span>
-                          <strong>
-                            {order.paymentStatus === 'paid'
-                              ? 'Paid'
-                              : order.paymentStatus === 'partially_paid'
-                                ? 'Partially paid'
-                                : order.paymentStatus === 'refunded'
-                                  ? 'Refunded'
-                                  : order.paymentStatus === 'failed'
-                                    ? 'Failed'
-                                    : order.paymentStatus === 'pending'
-                                      ? 'Pending'
-                                      : 'Not paid'}
-                          </strong>
-                        </div>
+                        {order.type === 'booking' && (
+                          <>
+                            <div>
+                              <span>Payment</span>
+                              <strong>
+                                {order.paymentStatus === 'paid'
+                                  ? 'Paid'
+                                  : order.paymentStatus === 'partially_paid'
+                                    ? 'Partially paid'
+                                    : order.paymentStatus === 'refunded'
+                                      ? 'Refunded'
+                                      : order.paymentStatus === 'failed'
+                                        ? 'Failed'
+                                        : order.paymentStatus === 'pending'
+                                          ? 'Pending'
+                                          : 'Not paid'}
+                              </strong>
+                            </div>
 
-                        <div>
-                          <span>Order total</span>
-                          <strong className="order-total">
-                            {formatMoney(order.total)}
-                          </strong>
-                        </div>
-                      </div>
+                            <div>
+                              <span>Order total</span>
+                              <strong className="order-total">
+                                {formatMoney(order.total ?? 0)}
+                              </strong>
+                            </div>
+                          </>
+                        )}
 
-                      {order.items.length > 0 && (
+                      {order.type === 'styling_enquiry' && (
+                        <div className="order-items">
+                          <span className="order-items-heading">
+                            STYLING ENQUIRY
+                          </span>
+                          {order.event.venue && (
+                            <p><strong>Venue:</strong> {order.event.venue}</p>
+                          )}
+                          {order.description && <p>{order.description}</p>}
+                        </div>
+                      )}
+                  </div>
+
+                      {order.items && order.items.length > 0 && (
                         <div className="order-items">
                           <span className="order-items-heading">
                             BOOKED ITEMS
@@ -361,7 +374,9 @@ export default function OrdersPage() {
 
                       <div className="order-card-footer">
                         <span>
-                          {order.status === 'pending_review'
+                        {order.type === 'styling_enquiry'
+                          ? 'Your styling enquiry has been received. The REIS team will review your brief.'
+                          : order.status === 'pending_review'
                             ? 'Your booking is awaiting review by our team.'
                             : order.status === 'approved' &&
                                 order.paymentStatus !== 'paid'
@@ -371,7 +386,7 @@ export default function OrdersPage() {
                                 : order.status === 'completed'
                                   ? 'This booking has been completed.'
                                   : 'Check back here for booking updates.'}
-                        </span>
+                      </span>
                       </div>
                     </article>
                   );
@@ -390,58 +405,41 @@ export default function OrdersPage() {
       ) : (
         <section className="orders-access">
           <div className="orders-access-heading">
-            <span className="orders-lock" aria-hidden="true">
-              ✳
-            </span>
+            <span className="orders-lock" aria-hidden="true">✳</span>
             <h2>Access your orders</h2>
             <p>
-              Enter the email address you used when booking. We’ll send you
-              a private access link so you can view your order history
-              securely.
+              Sign in to your REIS customer account to view your rental
+              and tent bookings, payment progress, and styling enquiries.
             </p>
           </div>
 
-          <form className="orders-form" onSubmit={requestAccess}>
-            <label htmlFor="orders-email">Email address</label>
-
-            <input
-              id="orders-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              maxLength={254}
-              required
-            />
-
-            <button
-              type="submit"
-              className="orders-primary orders-submit"
-              disabled={sendingLink}
+          <div className="orders-form">
+            <Link
+              href="/account/login?next=%2Forders"
+              className="orders-primary"
             >
-              {sendingLink ? 'Sending secure link…' : 'Email me an access link'}
-              {!sendingLink && <span aria-hidden="true">↗</span>}
-            </button>
-          </form>
+              Sign in to your account <span aria-hidden="true">↗</span>
+            </Link>
+
+            <Link
+              href="/account/register?next=%2Forders"
+              className="orders-secondary"
+            >
+              Create a customer account
+            </Link>
+          </div>
 
           {message && (
-            <p className="orders-message" role="status">
-              {message}
-            </p>
+            <p className="orders-message" role="status">{message}</p>
           )}
 
           {error && (
-            <p className="orders-error" role="alert">
-              {error}
-            </p>
+            <p className="orders-error" role="alert">{error}</p>
           )}
 
           <p className="orders-privacy">
-            Your order history is private. Only someone with access to your
-            email can use the verification link. No account or password is
-            required.
+            Your order history is private and is retrieved using your
+            authenticated customer account.
           </p>
         </section>
       )}

@@ -109,6 +109,7 @@ export interface Booking {
   reference: string;
   paymentCode?: string;
   customer: Customer;
+  customerUid?: string;
   customerEmailNormalized?: string;
   event: EventDetails;
   items: CartItem[];

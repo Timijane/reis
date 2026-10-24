@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { verifyCustomerToken } from "@/lib/customer/server-auth";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,7 @@ function validImages(value: unknown): value is string[] {
 
       try {
         const parsed = new URL(url);
+
         return (
           parsed.protocol === "https:" &&
           parsed.hostname === "res.cloudinary.com"
@@ -31,33 +33,52 @@ function validImages(value: unknown): value is string[] {
 }
 
 export async function POST(request: Request) {
+  const identity = await verifyCustomerToken(request);
+
+  if (!identity?.uid || !identity.email) {
+    return NextResponse.json(
+      { error: "Please sign in to submit a styling enquiry." },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = await request.json();
 
     const name = clean(body.name, 120);
-    const email = clean(body.email, 254).toLowerCase();
+    const submittedEmail = clean(body.email, 254).toLowerCase();
+    const email = identity.email.trim().toLowerCase();
     const phone = clean(body.phone, 40);
     const eventDate = clean(body.eventDate, 20);
     const eventType = clean(body.eventType, 80);
     const venue = clean(body.venue, 200);
     const description = clean(body.description, 5000);
 
-    if (!name || !email || !phone || !eventDate || !venue || !description) {
+    if (!name || !submittedEmail || !phone || !eventDate || !venue || !description) {
       return NextResponse.json(
         { error: "Please complete all required fields." },
         { status: 400 }
       );
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submittedEmail)) {
       return NextResponse.json(
         { error: "Please enter a valid email address." },
         { status: 400 }
       );
     }
 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate) ||
-        Number.isNaN(Date.parse(`${eventDate}T00:00:00Z`))) {
+    if (submittedEmail !== email) {
+      return NextResponse.json(
+        { error: "Your submitted email must match your signed-in account." },
+        { status: 403 }
+      );
+    }
+
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(eventDate) ||
+      Number.isNaN(Date.parse(`${eventDate}T00:00:00Z`))
+    ) {
       return NextResponse.json(
         { error: "Please provide a valid event date." },
         { status: 400 }
@@ -67,8 +88,11 @@ export async function POST(request: Request) {
     const venuePhotos = body.venuePhotos ?? [];
     const inspirationImages = body.inspirationImages ?? [];
 
-    if (!validImages(venuePhotos) || !validImages(inspirationImages) ||
-        venuePhotos.length + inspirationImages.length > MAX_IMAGES) {
+    if (
+      !validImages(venuePhotos) ||
+      !validImages(inspirationImages) ||
+      venuePhotos.length + inspirationImages.length > MAX_IMAGES
+    ) {
       return NextResponse.json(
         { error: "Please upload no more than eight valid images." },
         { status: 400 }
@@ -85,6 +109,8 @@ export async function POST(request: Request) {
 
     const record = {
       reference,
+      customerUid: identity.uid,
+      customerEmailNormalized: email,
       name,
       email,
       phone,
@@ -112,6 +138,7 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("Styling enquiry submission failed:", error);
+
     return NextResponse.json(
       { error: "We could not submit your enquiry. Please try again." },
       { status: 500 }

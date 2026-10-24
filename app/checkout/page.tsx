@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
 
 export default function Checkout() {
   const router = useRouter();
@@ -47,9 +48,23 @@ export default function Checkout() {
         items,
       };
 
+      const user = auth.currentUser;
+
+      if (!user) {
+        router.replace(
+          `/account/login?next=${encodeURIComponent('/checkout')}`
+        );
+        return;
+      }
+
+      const idToken = await user.getIdToken();
+
       const res = await fetch('/api/booking/create', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${idToken}`,
+        },
         body: JSON.stringify(body),
       });
 
