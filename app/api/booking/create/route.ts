@@ -202,6 +202,7 @@ export async function POST(req: Request) {
       id: reference,
       reference,
 
+      customerEmailNormalized: customer.email.trim().toLowerCase(),
       customer: {
         name: customer.name.trim(),
         email: customer.email.trim(),
