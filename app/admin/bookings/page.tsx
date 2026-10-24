@@ -342,11 +342,15 @@ function BookingCard({
   booking,
   onApprove,
   approving,
+  onVerifyPayment,
+  verifyingPayment,
   feedback,
 }: {
   booking: B;
   onApprove: (booking: B) => void;
   approving: boolean;
+  onVerifyPayment: (booking: B) => void;
+  verifyingPayment: boolean;
   feedback?: { type: 'success' | 'error'; text: string };
 }) {
   const [copied, setCopied] = useState(false);
@@ -540,6 +544,32 @@ function BookingCard({
           {booking.paymentCode}
         </div>
       )}
+      {booking.status === 'approved' &&
+        booking.paymentStatus !== 'paid' &&
+        booking.reservationStatus !== 'expired' && (
+          <div style={{ marginTop: 22 }}>
+            <button
+              type="button"
+              onClick={() => onVerifyPayment(booking)}
+              disabled={verifyingPayment}
+              style={{
+                padding: '12px 18px',
+                border: '1px solid #354737',
+                background: verifyingPayment ? '#e5e7e0' : '#354737',
+                color: verifyingPayment ? '#5e665a' : '#fff',
+                fontSize: 13,
+                fontWeight: 650,
+                cursor: verifyingPayment ? 'wait' : 'pointer',
+              }}
+            >
+              {verifyingPayment ? 'Verifying payment…' : 'Mark as Paid'}
+            </button>
+            <p style={{ ...styles.muted, marginTop: 8 }}>
+              Confirm the bank transfer has cleared before marking this booking as paid.
+            </p>
+          </div>
+        )}
+
       {booking.status === 'pending_review' &&
         booking.reservationStatus !== 'expired' && (
           <div style={{ marginTop: 22 }}>
@@ -589,6 +619,7 @@ export default function Bookings() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
   const [approvingId, setApprovingId] = useState('');
+  const [verifyingPaymentId, setVerifyingPaymentId] = useState('');
   const [actionFeedback, setActionFeedback] = useState<
     Record<string, { type: 'success' | 'error'; text: string }>
   >({});
@@ -708,6 +739,77 @@ export default function Bookings() {
       }));
     } finally {
       setApprovingId('');
+    }
+  }
+
+  async function verifyPayment(booking: B) {
+    const user = auth.currentUser;
+
+    if (!user) {
+      setActionFeedback((previous) => ({
+        ...previous,
+        [booking.id]: {
+          type: 'error',
+          text: 'Your admin session has expired. Sign in again.',
+        },
+      }));
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Have you confirmed that the bank transfer for ${booking.reference || booking.id} has arrived and cleared? Only continue if the funds are visible in the bank account.`
+    );
+
+    if (!confirmed) return;
+
+    setVerifyingPaymentId(booking.id);
+    setActionFeedback((previous) => {
+      const next = { ...previous };
+      delete next[booking.id];
+      return next;
+    });
+
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('/api/admin/bookings/verify-payment', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reference: booking.reference || booking.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Unable to verify payment.');
+      }
+
+      setActionFeedback((previous) => ({
+        ...previous,
+        [booking.id]: {
+          type: 'success',
+          text: 'Payment verified and marked as paid.',
+        },
+      }));
+
+      await loadBookings(user, true);
+    } catch (error) {
+      setActionFeedback((previous) => ({
+        ...previous,
+        [booking.id]: {
+          type: 'error',
+          text:
+            error instanceof Error
+              ? error.message
+              : 'Unable to verify payment.',
+        },
+      }));
+    } finally {
+      setVerifyingPaymentId('');
     }
   }
 
@@ -918,6 +1020,8 @@ export default function Bookings() {
                 booking={booking}
                 onApprove={approveBooking}
                 approving={approvingId === booking.id}
+                onVerifyPayment={verifyPayment}
+                verifyingPayment={verifyingPaymentId === booking.id}
                 feedback={actionFeedback[booking.id]}
               />
             ))}
