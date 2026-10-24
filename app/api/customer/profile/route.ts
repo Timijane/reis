@@ -6,6 +6,39 @@ import { verifyCustomerToken } from '@/lib/customer/server-auth';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+
+export async function GET(request: Request) {
+  try {
+    const identity = await verifyCustomerToken(request);
+
+    if (!identity?.uid || !identity?.email) {
+      return NextResponse.json(
+        { error: 'Authentication required.' },
+        { status: 401 }
+      );
+    }
+
+    const db = getAdminDb();
+    const snapshot = await db.collection('customers').doc(identity.uid).get();
+    const saved = snapshot.exists ? snapshot.data() : undefined;
+
+    return NextResponse.json({
+      success: true,
+      profile: {
+        uid: identity.uid,
+        name: typeof saved?.name === 'string' ? saved.name : '',
+        email: identity.email,
+        phone: typeof saved?.phone === 'string' ? saved.phone : '',
+      },
+    });
+  } catch {
+    return NextResponse.json(
+      { error: 'Unable to retrieve the customer profile.' },
+      { status: 401 }
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const identity = await verifyCustomerToken(request);

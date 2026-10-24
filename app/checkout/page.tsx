@@ -1,13 +1,66 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function Checkout() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerProfileLoading, setCustomerProfileLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        if (active) setCustomerProfileLoading(false);
+        return;
+      }
+
+      // Show Firebase Auth details immediately while retrieving the saved profile.
+      if (active) {
+        setCustomerName(user.displayName || '');
+        setCustomerEmail(user.email || '');
+      }
+
+      try {
+        const idToken = await user.getIdToken();
+        const response = await fetch('/api/customer/profile', {
+          method: 'GET',
+          headers: { authorization: `Bearer ${idToken}` },
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error('Could not retrieve the saved customer profile.');
+        }
+
+        const result = await response.json();
+        const profile = result.profile || {};
+
+        if (active) {
+          setCustomerName(profile.name || user.displayName || '');
+          setCustomerEmail(profile.email || user.email || '');
+          setCustomerPhone(profile.phone || '');
+        }
+      } catch (error) {
+        console.error('Unable to load REIS customer profile:', error);
+      } finally {
+        if (active) setCustomerProfileLoading(false);
+      }
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -153,6 +206,9 @@ export default function Checkout() {
                       type="text"
                       autoComplete="name"
                       placeholder="Your full name"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      disabled={customerProfileLoading}
                       required
                     />
                   </div>
@@ -167,6 +223,9 @@ export default function Checkout() {
                       type="email"
                       autoComplete="email"
                       placeholder="you@example.com"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      disabled={customerProfileLoading}
                       required
                     />
                   </div>
@@ -181,6 +240,9 @@ export default function Checkout() {
                       type="tel"
                       autoComplete="tel"
                       placeholder="Your contact number"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      disabled={customerProfileLoading}
                       required
                     />
                   </div>

@@ -1,10 +1,16 @@
 import type { ReactNode } from 'react';
 import CustomerGate from '@/components/customer/CustomerGate';
+import CustomerNavigation from '@/components/customer/CustomerNavigation';
 
-export default function CustomerProtectedLayout({
+export default function CustomerLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  return <CustomerGate>{children}</CustomerGate>;
+  return (
+    <>
+      <CustomerNavigation />
+      <CustomerGate>{children}</CustomerGate>
+    </>
+  );
 }
