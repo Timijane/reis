@@ -41,6 +41,7 @@ export default function AccountForm({ mode }: AccountFormProps) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -225,20 +226,29 @@ export default function AccountForm({ mode }: AccountFormProps) {
             </label>
           )}
 
-          <label>
-            Password
+          <label className="account-password-label">
+          Password
+          <div className="account-password-field">
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               name="password"
-              autoComplete={
-                registering ? 'new-password' : 'current-password'
-              }
+              autoComplete={registering ? 'new-password' : 'current-password'}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
               minLength={registering ? 8 : undefined}
             />
-          </label>
+            <button
+              type="button"
+              className="account-password-toggle"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? 'HIDE' : 'SHOW'}
+            </button>
+          </div>
+        </label>
 
           {!registering && (
             <div className="account-forgot">
@@ -387,6 +397,34 @@ export default function AccountForm({ mode }: AccountFormProps) {
         .account-form input:focus {
           outline: 1px solid #68765b;
           border-color: #68765b;
+        }
+
+        .account-password-field {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .account-password-field input {
+          padding-right: 76px;
+        }
+
+        .account-password-toggle {
+          position: absolute;
+          right: 12px;
+          min-height: 36px;
+          padding: 0 4px;
+          border: 0;
+          background: transparent;
+          color: #59664e;
+          font: 600 10px Arial, sans-serif;
+          letter-spacing: 0.08em;
+          cursor: pointer;
+        }
+
+        .account-password-toggle:focus-visible {
+          outline: 2px solid #68765b;
+          outline-offset: 3px;
         }
 
         .account-forgot {

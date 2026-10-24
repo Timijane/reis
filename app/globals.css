@@ -1940,3 +1940,108 @@ img { display: block; width: 100%; }
     transition: none;
   }
 }
+
+
+/* REIS customer-facing rental and tent detail pages */
+.reis-rental-detail,
+.reis-tent-detail {
+  width: calc(100% - 40px);
+  max-width: 1180px;
+  min-width: 0;
+  margin-inline: auto;
+  overflow-wrap: anywhere;
+}
+
+.reis-rental-detail *,
+.reis-tent-detail * {
+  min-width: 0;
+}
+
+.reis-rental-detail img,
+.reis-tent-detail img {
+  max-width: 100%;
+}
+
+.reis-rental-detail input,
+.reis-tent-detail input,
+.reis-rental-detail select,
+.reis-tent-detail select,
+.reis-rental-detail textarea,
+.reis-tent-detail textarea {
+  max-width: 100%;
+  border-radius: 0;
+}
+
+.reis-rental-detail input:focus-visible,
+.reis-tent-detail input:focus-visible {
+  outline: 2px solid var(--olive);
+  outline-offset: 2px;
+}
+
+.reis-rental-detail .btn,
+.reis-tent-detail .btn,
+.reis-customer-detail-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 14px 22px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  line-height: 1.4;
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.reis-rental-detail .btn:hover,
+.reis-tent-detail .btn:hover,
+.reis-customer-detail-button:hover {
+  background: var(--olive);
+  border-color: var(--olive);
+  color: #fff;
+}
+
+.reis-rental-detail .btn:focus-visible,
+.reis-tent-detail .btn:focus-visible,
+.reis-customer-detail-button:focus-visible {
+  outline: 2px solid var(--olive);
+  outline-offset: 3px;
+}
+
+.reis-rental-detail .btn:disabled,
+.reis-tent-detail .btn:disabled,
+.reis-customer-detail-button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+@media (max-width: 640px) {
+  .reis-rental-detail,
+  .reis-tent-detail {
+    width: calc(100% - 32px);
+  }
+
+  .reis-rental-detail .btn,
+  .reis-tent-detail .btn,
+  .reis-customer-detail-button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reis-rental-detail .btn,
+  .reis-tent-detail .btn,
+  .reis-customer-detail-button {
+    transition: none;
+  }
+}

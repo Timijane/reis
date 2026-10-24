@@ -45,7 +45,7 @@ export default function TentDetailPage({
 
   if (loading) {
     return (
-      <main className="container">
+      <main className="container reis-tent-detail">
         <section style={{ padding: '60px 0' }}>
           <p className="muted">Loading marquee...</p>
         </section>
@@ -87,6 +87,10 @@ export default function TentDetailPage({
 
   const promo = activePromo(tent);
   const price = unitPrice(tent);
+  const today = new Date();
+  const minimumDate = new Date(
+    today.getTime() - today.getTimezoneOffset() * 60000
+  ).toISOString().slice(0, 10);
 
   function addToCart() {
     if (!eventDate) {
@@ -94,7 +98,16 @@ export default function TentDetailPage({
       return;
     }
 
-    if (quantity < minimum || quantity > maximum) {
+    if (eventDate < minimumDate) {
+      setMessage('Please select today or a future event date.');
+      return;
+    }
+
+    if (
+      !Number.isInteger(quantity) ||
+      quantity < minimum ||
+      quantity > maximum
+    ) {
       setMessage(
         `Please choose a quantity between ${minimum} and ${maximum}.`
       );
@@ -114,9 +127,23 @@ export default function TentDetailPage({
       image: tent.image,
     };
 
+    let existingCart: unknown[] = [];
+
+    try {
+      const storedCart = localStorage.getItem('reis-cart');
+      const parsedCart: unknown = storedCart ? JSON.parse(storedCart) : [];
+
+      if (Array.isArray(parsedCart)) {
+        existingCart = parsedCart;
+      }
+    } catch {
+      setMessage('Your saved cart could not be read. Please check your cart before continuing.');
+      return;
+    }
+
     localStorage.setItem(
       'reis-cart',
-      JSON.stringify([item])
+      JSON.stringify([...existingCart, item])
     );
 
     window.location.href = '/cart';
@@ -179,6 +206,7 @@ export default function TentDetailPage({
                 Event date
                 <input
                   type="date"
+                  min={minimumDate}
                   value={eventDate}
                   onChange={(event) =>
                     setEventDate(event.target.value)

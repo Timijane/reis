@@ -82,7 +82,7 @@ export default function RentalDetailPage({
 
   if (loading) {
     return (
-      <main className="container">
+      <main className="container reis-rental-detail">
         <section style={{ padding: '60px 0' }}>
           <p className="muted">Loading rental...</p>
         </section>

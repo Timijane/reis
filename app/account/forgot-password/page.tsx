@@ -45,98 +45,147 @@ export default function ForgotPasswordPage() {
   return (
     <main className="reset-page">
       <section className="reset-panel">
-        <Link href="/" className="brand">
+        <Link href="/" className="reset-brand">
           REIS <span>EVENT SERVICES</span>
         </Link>
 
-        <p className="eyebrow">ACCOUNT RECOVERY</p>
-        <h1>Reset your <em>password.</em></h1>
-        <p className="intro">
-          Enter the email address associated with your REIS customer account.
-          We will send instructions to reset your password.
-        </p>
+        <div className="reset-content">
+          <p className="reset-eyebrow">ACCOUNT RECOVERY</p>
+          <h1>Find your way <em>back.</em></h1>
+          <p className="reset-intro">
+            Enter the email address associated with your REIS customer
+            account. We will send instructions to reset your password.
+          </p>
 
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="email">Email address</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
+          <form onSubmit={handleSubmit} className="reset-form">
+            <label htmlFor="reset-email">Email address</label>
+            <input
+              id="reset-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
 
-          {message && <p className="success" role="status">{message}</p>}
-          {error && <p className="error" role="alert">{error}</p>}
+            {message && (
+              <p className="reset-success" role="status">{message}</p>
+            )}
+            {error && (
+              <p className="reset-error" role="alert">{error}</p>
+            )}
 
-          <button type="submit" disabled={busy}>
-            {busy ? 'PLEASE WAIT…' : 'SEND RESET INSTRUCTIONS'}
-          </button>
-        </form>
+            <button type="submit" disabled={busy}>
+              {busy ? 'PLEASE WAIT…' : 'SEND RESET INSTRUCTIONS'}
+            </button>
+          </form>
 
-        <Link href="/account/login" className="back">
-          ← Return to sign in
+          <Link href="/account/login" className="reset-back">
+            ← Return to sign in
+          </Link>
+        </div>
+
+        <Link href="/" className="reset-home">
+          ← Return to the REIS homepage
         </Link>
       </section>
+
+      <aside className="reset-visual" aria-label="REIS event styling">
+        <div className="reset-visual-overlay" />
+        <div className="reset-visual-copy">
+          <p>THOUGHTFULLY CURATED</p>
+          <h2>Every detail.<br />Every occasion.<br /><em>Every memory.</em></h2>
+          <span>WE STYLE YOUR EVENT, YOU CREATE MEMORIES.</span>
+        </div>
+      </aside>
 
       <style jsx>{`
         .reset-page {
           min-height: 100vh;
           display: grid;
-          place-items: center;
-          padding: 24px;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
           background: #faf9f6;
           color: #161614;
-          font-family: Arial, sans-serif;
+          font-family: var(--sans, Arial, sans-serif);
         }
+
         .reset-panel {
           width: 100%;
-          max-width: 470px;
-          padding: 35px 0;
+          max-width: 640px;
+          padding: 42px clamp(24px, 6vw, 84px);
+          margin: auto;
+          display: flex;
+          flex-direction: column;
         }
-        .brand {
+
+        .reset-brand {
           display: inline-flex;
+          align-self: flex-start;
           flex-direction: column;
           gap: 5px;
-          font-family: Georgia, serif;
-          font-size: 25px;
-          letter-spacing: .15em;
+          font-family: var(--serif, Georgia, serif);
+          font-size: 27px;
+          letter-spacing: 0.15em;
+          text-decoration: none;
+          color: #161614;
         }
-        .brand span {
-          font-family: Arial, sans-serif;
+
+        .reset-brand span {
+          font-family: var(--sans, Arial, sans-serif);
           font-size: 8px;
-          letter-spacing: .25em;
+          letter-spacing: 0.25em;
           color: #77756e;
         }
-        .eyebrow {
-          margin-top: 65px;
+
+        .reset-content {
+          width: 100%;
+          max-width: 440px;
+          margin: auto 0;
+          padding: 60px 0;
+        }
+
+        .reset-eyebrow {
+          margin: 0 0 20px;
           color: #68765b;
           font-size: 9px;
-          letter-spacing: .2em;
+          letter-spacing: 0.2em;
         }
-        h1 {
-          margin: 18px 0;
-          font-family: Georgia, serif;
-          font-size: clamp(38px, 8vw, 58px);
+
+        .reset-content h1 {
+          margin: 0 0 20px;
+          font-family: var(--serif, Georgia, serif);
+          font-size: clamp(42px, 5vw, 66px);
           font-weight: 500;
-          line-height: 1.05;
+          line-height: 0.98;
+          letter-spacing: -0.035em;
         }
-        h1 em { font-weight: 400; }
-        .intro {
-          margin-bottom: 30px;
+
+        .reset-content h1 em,
+        .reset-visual-copy h2 em {
+          font-weight: 400;
+        }
+
+        .reset-intro {
+          max-width: 410px;
+          margin: 0 0 32px;
           color: #77756e;
           font-size: 13px;
           line-height: 1.9;
         }
-        form { display: grid; gap: 13px; }
-        label {
+
+        .reset-form {
+          display: grid;
+          gap: 13px;
+        }
+
+        .reset-form label {
           font-size: 10px;
-          letter-spacing: .1em;
+          letter-spacing: 0.1em;
           text-transform: uppercase;
         }
-        input {
+
+        .reset-form input {
           width: 100%;
           min-height: 49px;
           padding: 12px 14px;
@@ -144,35 +193,152 @@ export default function ForgotPasswordPage() {
           border-radius: 0;
           background: #fff;
           color: #161614;
-          font-size: 14px;
+          font: 14px var(--sans, Arial, sans-serif);
         }
-        input:focus {
-          outline: 1px solid #68765b;
-          border-color: #68765b;
+
+        .reset-form input:focus-visible {
+          outline: 2px solid #68765b;
+          outline-offset: 2px;
         }
-        button {
+
+        .reset-form button {
           min-height: 52px;
           margin-top: 8px;
+          padding: 12px;
           border: 1px solid #161614;
           background: #161614;
           color: #fff;
           font-size: 10px;
-          letter-spacing: .12em;
+          letter-spacing: 0.12em;
           cursor: pointer;
+          transition: background 160ms ease, color 160ms ease;
         }
-        button:disabled { opacity: .65; cursor: wait; }
-        .success, .error {
+
+        .reset-form button:hover:not(:disabled) {
+          background: #68765b;
+          border-color: #68765b;
+        }
+
+        .reset-form button:focus-visible,
+        .reset-back:focus-visible,
+        .reset-home:focus-visible,
+        .reset-brand:focus-visible {
+          outline: 2px solid #68765b;
+          outline-offset: 4px;
+        }
+
+        .reset-form button:disabled {
+          opacity: 0.65;
+          cursor: wait;
+        }
+
+        .reset-success,
+        .reset-error {
           padding: 12px;
           font-size: 12px;
           line-height: 1.7;
+          overflow-wrap: anywhere;
         }
-        .success { background: #edf2e9; color: #405438; }
-        .error { background: #f7eae7; color: #8c3026; }
-        .back {
+
+        .reset-success {
+          background: #edf2e9;
+          color: #405438;
+        }
+
+        .reset-error {
+          background: #f7eae7;
+          color: #8c3026;
+        }
+
+        .reset-back {
           display: inline-block;
           margin-top: 24px;
-          color: #68765b;
+          color: #59664e;
           font-size: 12px;
+          text-underline-offset: 3px;
+        }
+
+        .reset-home {
+          align-self: flex-start;
+          color: #77756e;
+          font-size: 10px;
+          text-decoration: none;
+        }
+
+        .reset-visual {
+          min-height: 100vh;
+          position: relative;
+          display: flex;
+          align-items: flex-end;
+          padding: 8%;
+          color: #fff;
+          background:
+            url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1600&q=85')
+            center / cover;
+        }
+
+        .reset-visual-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            180deg,
+            rgba(15, 15, 13, 0.05),
+            rgba(15, 15, 13, 0.78)
+          );
+        }
+
+        .reset-visual-copy {
+          position: relative;
+          z-index: 1;
+        }
+
+        .reset-visual-copy > p {
+          font-size: 9px;
+          letter-spacing: 0.22em;
+        }
+
+        .reset-visual-copy h2 {
+          margin: 20px 0;
+          font-family: var(--serif, Georgia, serif);
+          font-size: clamp(38px, 4vw, 64px);
+          font-weight: 500;
+          line-height: 1;
+        }
+
+        .reset-visual-copy > span {
+          font-size: 8px;
+          letter-spacing: 0.16em;
+          line-height: 1.8;
+        }
+
+        @media (max-width: 760px) {
+          .reset-page {
+            display: block;
+          }
+
+          .reset-panel {
+            min-height: 100vh;
+            max-width: 540px;
+            padding: 30px 24px;
+          }
+
+          .reset-content {
+            padding: 55px 0;
+          }
+
+          .reset-eyebrow {
+            margin-bottom: 18px;
+          }
+
+          .reset-visual {
+            display: none;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .reset-form button {
+            transition: none;
+          }
         }
       `}</style>
     </main>
