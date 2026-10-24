@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
+import { randomBytes } from 'node:crypto';
 import { getAdminDb } from '@/lib/firebase-admin';
+import { getSiteUrl } from '@/lib/site-url';
 import { requireAdmin } from '@/lib/admin/server-auth';
 
 export async function POST(request: Request) {
@@ -21,6 +23,7 @@ export async function POST(request: Request) {
     const bookingRef = db.collection('bookings').doc(reference);
     const eventRef = bookingRef.collection('paymentEvents').doc();
     const now = new Date().toISOString();
+    const receiptVerificationToken = randomBytes(32).toString('hex');
 
     const result = await db.runTransaction(async (transaction) => {
       const snapshot = await transaction.get(bookingRef);
@@ -40,10 +43,12 @@ export async function POST(request: Request) {
       }
 
       if (
-        booking.reservationStatus === 'expired' ||
-        booking.status === 'expired' ||
-        booking.status === 'cancelled' ||
-        booking.status === 'rejected'
+        ['expired', 'cancelled', 'rejected'].includes(
+          String(booking.reservationStatus || '').toLowerCase(),
+        ) ||
+        ['expired', 'cancelled', 'rejected'].includes(
+          String(booking.status || '').toLowerCase(),
+        )
       ) {
         return { error: 'BOOKING_NOT_PAYABLE' as const };
       }
@@ -53,6 +58,7 @@ export async function POST(request: Request) {
         paymentMethod: 'bank_transfer',
         paymentVerificationSource: 'manual_admin',
         paymentVerifiedAt: now,
+        receiptVerificationToken,
         paymentVerifiedBy: admin.uid,
         paymentVerifiedByEmail: admin.email ?? null,
         updatedAt: now,
@@ -68,11 +74,22 @@ export async function POST(request: Request) {
         verifiedByEmail: admin.email ?? null,
       });
 
+      const customer =
+        booking.customer && typeof booking.customer === 'object'
+          ? booking.customer as Record<string, unknown>
+          : {};
+
       return {
         success: true as const,
         reference,
         paymentStatus: 'paid',
         paymentVerifiedAt: now,
+        receiptVerificationToken,
+        customerEmail:
+          typeof customer.email === 'string' ? customer.email.trim() : '',
+        customerName:
+          typeof customer.name === 'string' ? customer.name.trim() : '',
+        amount: booking.total ?? null,
       };
     });
 
@@ -104,7 +121,84 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json(result);
+    let emailNotification: 'sent' | 'skipped' | 'failed' = 'skipped';
+
+    const emailApiKey = process.env.RESEND_API_KEY;
+    const emailFrom = process.env.REIS_FROM_EMAIL;
+    const customerEmail = result.customerEmail;
+
+    if (emailApiKey && emailFrom && customerEmail) {
+      try {
+        const amount =
+          typeof result.amount === 'number'
+            ? new Intl.NumberFormat('en-GB', {
+                style: 'currency',
+                currency: 'GBP',
+              }).format(result.amount)
+            : 'the amount recorded on your booking';
+
+        const greeting = result.customerName
+          ? `Dear ${result.customerName},`
+          : 'Hello,';
+
+        const emailResponse = await fetch(
+          'https://api.resend.com/emails',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${emailApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: emailFrom,
+              to: [customerEmail],
+              subject: `Payment confirmed — REIS booking ${result.reference}`,
+              text: [
+                greeting,
+                '',
+                'REIS Event Services has verified your bank transfer.',
+                '',
+                `Booking reference: ${result.reference}`,
+                `Verify payment receipt: ${getSiteUrl()}/booking/verify?token=${encodeURIComponent(result.receiptVerificationToken)}`,
+                `Payment status: Paid`,
+                `Booking total: ${amount}`,
+                `Verified at: ${result.paymentVerifiedAt}`,
+                '',
+                'Please keep this email for your records.',
+                '',
+                'We style your event, you create memories.',
+                'REIS Event Services',
+              ].join('\n'),
+            }),
+            signal: AbortSignal.timeout(10000),
+          },
+        );
+
+        if (!emailResponse.ok) {
+          console.error(
+            'Payment confirmation email failed:',
+            emailResponse.status,
+          );
+          emailNotification = 'failed';
+        } else {
+          emailNotification = 'sent';
+        }
+      } catch (emailError) {
+        console.error(
+          'Payment confirmation email could not be sent:',
+          emailError instanceof Error ? emailError.message : 'Unknown error',
+        );
+        emailNotification = 'failed';
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      reference: result.reference,
+      paymentStatus: result.paymentStatus,
+      paymentVerifiedAt: result.paymentVerifiedAt,
+      emailNotification,
+    });
   } catch (error) {
     if (error instanceof Error && error.message === 'UNAUTHORIZED') {
       return NextResponse.json(
