@@ -243,6 +243,7 @@ export default function RentalDetailPage({
       }
 
       localStorage.setItem('reis-cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('reis-cart-updated'));
       setAdding(true);
       window.location.href = '/cart';
     } catch {

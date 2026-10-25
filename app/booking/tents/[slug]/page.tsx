@@ -145,6 +145,7 @@ export default function TentDetailPage({
       'reis-cart',
       JSON.stringify([...existingCart, item])
     );
+    window.dispatchEvent(new Event('reis-cart-updated'));
 
     window.location.href = '/cart';
   }

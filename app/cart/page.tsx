@@ -37,6 +37,7 @@ export default function Cart() {
 
     try {
       localStorage.setItem('reis-cart', JSON.stringify(nextItems));
+      window.dispatchEvent(new Event('reis-cart-updated'));
     } catch {
       // Keep the current page usable if browser storage is unavailable.
     }

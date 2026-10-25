@@ -15,7 +15,7 @@ type AccountFormProps = {
 };
 
 function destination(): string {
-  if (typeof window === 'undefined') return '/shop';
+  if (typeof window === 'undefined') return '/account/profile';
 
   const requested = new URLSearchParams(window.location.search).get('next');
 
@@ -30,7 +30,7 @@ function destination(): string {
     return requested;
   }
 
-  return '/shop';
+  return '/account/profile';
 }
 
 export default function AccountForm({ mode }: AccountFormProps) {

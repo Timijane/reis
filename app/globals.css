@@ -2360,3 +2360,541 @@ img { display: block; width: 100%; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Customer navigation: CMS logo marks and floating cart. */
+.reis-customer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.reis-customer-brand-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.reis-customer-menu-icon {
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.reis-customer-menu-fallback {
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-family: var(--serif, Georgia, serif);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.reis-customer-menu-count {
+  display: inline-grid;
+  min-width: 23px;
+  height: 23px;
+  padding: 0 6px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--olive, #68765b);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.reis-floating-cart {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 1200;
+  display: inline-flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 17px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: var(--ink, #161614);
+  color: var(--paper, #faf9f6);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.reis-floating-cart:hover {
+  background: var(--olive, #68765b);
+  transform: translateY(-2px);
+}
+
+.reis-floating-cart-count {
+  display: inline-grid;
+  min-width: 25px;
+  height: 25px;
+  padding: 0 6px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--paper, #faf9f6);
+  color: var(--ink, #161614);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  .reis-floating-cart {
+    right: max(13px, env(safe-area-inset-right));
+    bottom: max(13px, env(safe-area-inset-bottom));
+    min-height: 51px;
+    gap: 8px;
+    padding-inline: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reis-floating-cart {
+    transition: none;
+  }
+}
+
+/* Customer navigation: CMS logo marks and floating cart. */
+.reis-customer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.reis-customer-brand-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.reis-customer-menu-icon {
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.reis-customer-menu-fallback {
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-family: var(--serif, Georgia, serif);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.reis-customer-menu-count {
+  display: inline-grid;
+  min-width: 23px;
+  height: 23px;
+  padding: 0 6px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--olive, #68765b);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.reis-floating-cart {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 1200;
+  display: inline-flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 17px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: var(--ink, #161614);
+  color: var(--paper, #faf9f6);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.reis-floating-cart:hover {
+  background: var(--olive, #68765b);
+  transform: translateY(-2px);
+}
+
+.reis-floating-cart-count {
+  display: inline-grid;
+  min-width: 25px;
+  height: 25px;
+  padding: 0 6px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--paper, #faf9f6);
+  color: var(--ink, #161614);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  .reis-floating-cart {
+    right: max(13px, env(safe-area-inset-right));
+    bottom: max(13px, env(safe-area-inset-bottom));
+    min-height: 51px;
+    gap: 8px;
+    padding-inline: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reis-floating-cart {
+    transition: none;
+  }
+}
+
+
+/* Customer menu icon alignment */
+.reis-customer-nav-icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  color: currentColor;
+}
+
+/* REIS customer profile */
+.reis-profile-page {
+  min-height: 75vh;
+  padding: clamp(36px, 7vw, 82px) 20px 64px;
+  background: #f8f7f3;
+  color: #292b25;
+}
+
+.reis-profile-container {
+  width: min(100%, 1000px);
+  margin: 0 auto;
+}
+
+.reis-profile-heading {
+  max-width: 680px;
+  margin-bottom: 38px;
+}
+
+.reis-profile-eyebrow {
+  display: block;
+  color: #777b68;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .17em;
+  line-height: 1.7;
+  text-transform: uppercase;
+}
+
+.reis-profile-heading h1 {
+  margin: 14px 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(38px, 7vw, 65px);
+  font-weight: 400;
+  letter-spacing: -.045em;
+  line-height: 1.08;
+}
+
+.reis-profile-heading h1 em {
+  color: #777b68;
+  font-weight: 400;
+}
+
+.reis-profile-heading > div > p {
+  max-width: 490px;
+  margin: 16px 0 0;
+  color: #696b63;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.reis-profile-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px solid #e5e3db;
+  background: #fff;
+}
+
+.reis-profile-avatar {
+  display: grid;
+  width: 66px;
+  height: 66px;
+  place-items: center;
+  border-radius: 50%;
+  background: #eeeee7;
+  color: #666b56;
+}
+
+.reis-profile-identity h2 {
+  margin: 6px 0 4px;
+  overflow-wrap: anywhere;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 400;
+}
+
+.reis-profile-identity p {
+  margin: 0;
+  color: #77796f;
+  font-size: 13px;
+}
+
+.reis-profile-signout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1px solid #e5e3db;
+  background: #fff;
+  color: #45473e;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.reis-profile-signout:disabled {
+  cursor: wait;
+  opacity: .6;
+}
+
+.reis-profile-details {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  padding-top: 25px;
+  border-top: 1px solid #ecebe5;
+}
+
+.reis-profile-details > div {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 11px;
+  color: #777b68;
+}
+
+.reis-profile-details > div > span {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.reis-profile-details small {
+  color: #77796f;
+  font-size: 11px;
+}
+
+.reis-profile-details strong {
+  overflow-wrap: anywhere;
+  color: #303229;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.reis-profile-services {
+  margin-top: 52px;
+}
+
+.reis-profile-section-heading {
+  margin-bottom: 22px;
+}
+
+.reis-profile-section-heading h2 {
+  margin: 8px 0 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(25px, 4vw, 34px);
+  font-weight: 400;
+  letter-spacing: -.025em;
+}
+
+.reis-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.reis-profile-link-card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 15px;
+  padding: 22px 18px;
+  border: 1px solid #e5e3db;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color .2s ease, background .2s ease;
+}
+
+.reis-profile-link-card:hover {
+  border-color: #92977e;
+  background: #fcfcf9;
+}
+
+.reis-profile-link-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  background: #f0f0e9;
+  color: #686e56;
+}
+
+.reis-profile-link-copy {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 6px;
+}
+
+.reis-profile-link-copy strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.reis-profile-link-copy small {
+  color: #77796f;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.reis-profile-arrow {
+  flex: 0 0 auto;
+  color: #858977;
+}
+
+.reis-profile-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 35px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e3db;
+  color: #77796f;
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+.reis-profile-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #45473e;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+
+.reis-profile-state {
+  display: grid;
+  min-height: 180px;
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+  border: 1px solid #e5e3db;
+  background: #fff;
+  color: #696b63;
+  text-align: center;
+}
+
+.reis-profile-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.reis-profile-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid #e5e3db;
+  border-top-color: #777b68;
+  border-radius: 50%;
+  animation: reis-profile-spin .8s linear infinite;
+}
+
+.reis-profile-button {
+  padding: 10px 16px;
+  border: 1px solid #d8d8ce;
+  background: #fff;
+  color: #292b25;
+  cursor: pointer;
+}
+
+.reis-profile-notice {
+  padding: 12px 15px;
+  border: 1px solid #e5d6c3;
+  background: #fffaf4;
+  color: #795a35;
+  font-size: 13px;
+}
+
+@keyframes reis-profile-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  .reis-profile-page {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+
+  .reis-profile-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 15px;
+  }
+
+  .reis-profile-avatar {
+    width: 54px;
+    height: 54px;
+  }
+
+  .reis-profile-signout {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .reis-profile-details {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .reis-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reis-profile-link-card {
+    padding: 17px 14px;
+  }
+
+  .reis-profile-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reis-profile-spinner {
+    animation: none;
+  }
+
+  .reis-profile-link-card {
+    transition: none;
+  }
+}
