@@ -151,7 +151,7 @@ export default function TentDetailPage({
   }
 
   return (
-    <main className="container">
+    <main className="container reis-tent-detail">
       <section
         style={{
           padding: '48px 0 60px',

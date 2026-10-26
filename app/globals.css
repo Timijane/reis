@@ -2046,6 +2046,37 @@ img { display: block; width: 100%; }
   }
 }
 
+/* Keep rental and tent detail layouts usable on narrow screens. */
+@media (max-width: 640px) {
+  .reis-rental-detail section,
+  .reis-tent-detail section {
+    min-width: 0;
+  }
+
+  .reis-rental-detail h1,
+  .reis-tent-detail h1 {
+    overflow-wrap: anywhere;
+  }
+
+  .reis-rental-detail input[type="date"],
+  .reis-rental-detail input[type="number"],
+  .reis-tent-detail input[type="date"],
+  .reis-tent-detail input[type="number"] {
+    box-sizing: border-box;
+  }
+
+  .reis-rental-detail input[type="number"] {
+    flex: 0 0 100px;
+    width: 100px !important;
+  }
+
+  .reis-rental-detail .btn,
+  .reis-tent-detail .btn {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
 /* =========================================================
    REIS CUSTOMER NAVIGATION
    Scoped to customer route layouts; does not alter the
@@ -2269,14 +2300,14 @@ img { display: block; width: 100%; }
 
 /* REIS customer pages: responsive refinements */
 @media (max-width: 600px) {
-  /* Give rental and tent cards room to display their details. */
+  /* Preserve two catalogue columns on mobile. */
   .reis-product-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 18px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
   }
 
   .reis-product-grid .reis-product-photo {
-    aspect-ratio: 5 / 3;
+    aspect-ratio: 1 / 1;
   }
 
   .reis-product-grid .reis-product-body {
@@ -2285,7 +2316,7 @@ img { display: block; width: 100%; }
   }
 
   .reis-product-grid .reis-product-body h2 {
-    font-size: clamp(21px, 6vw, 27px);
+    font-size: clamp(14px, 3.8vw, 19px);
     line-height: 1.2;
   }
 

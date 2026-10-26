@@ -255,7 +255,7 @@ export default function RentalDetailPage({
   }
 
   return (
-    <main className="container">
+    <main className="container reis-rental-detail">
       <section
         style={{
           padding: '32px 0 76px',

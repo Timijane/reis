@@ -35,7 +35,7 @@ export default async function TentsPage() {
         </section>
       ) : (
         <section
-          className="grid"
+          className="grid reis-product-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
