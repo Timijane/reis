@@ -3246,3 +3246,154 @@ img { display: block; width: 100%; }
     transition: none;
   }
 }
+
+/* REIS customer header — align with homepage branding */
+.reis-customer-announcement {
+  min-height: 34px;
+  padding: 8px 24px;
+  background: var(--olive);
+  color: #f8f7f1;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.reis-customer-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(250, 249, 246, 0.97);
+  border-bottom: 1px solid var(--line);
+}
+
+.reis-customer-nav-bar {
+  min-height: 108px;
+  padding: 12px 5vw;
+  gap: 20px;
+}
+
+.reis-customer-brand {
+  flex-direction: row;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.reis-customer-menu-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  flex: 0 0 44px;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  border: 1px solid #9b9b91;
+  border-radius: 50%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.reis-customer-menu-fallback {
+  display: grid;
+  place-items: center;
+  font-family: var(--serif, Georgia, serif);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.reis-customer-brand-copy {
+  display: flex;
+  flex-direction: column;
+  letter-spacing: 0.16em;
+  line-height: 1;
+}
+
+.reis-customer-brand-name {
+  font-family: var(--serif, Georgia, serif);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.16em;
+}
+
+.reis-customer-brand-caption {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 7px;
+  line-height: 1;
+  letter-spacing: 0.35em;
+}
+
+.reis-customer-menu-toggle {
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  height: 42px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  gap: 6px;
+}
+
+.reis-customer-menu-toggle:hover,
+.reis-customer-menu-toggle:focus-visible {
+  background: transparent;
+  color: var(--ink);
+}
+
+.reis-customer-menu-toggle > span:not(.reis-customer-menu-label) {
+  width: 25px;
+}
+
+.reis-customer-menu-label {
+  display: none;
+}
+
+@media (max-width: 850px) {
+  .reis-customer-nav-bar {
+    min-height: 84px;
+  }
+}
+
+@media (max-width: 520px) {
+  .reis-customer-announcement {
+    padding: 8px 12px;
+    font-size: 8px;
+  }
+
+  .reis-customer-nav-bar {
+    min-height: 84px;
+    padding: 10px 16px;
+  }
+
+  .reis-customer-brand-name {
+    font-size: 13px;
+  }
+
+  .reis-customer-menu-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    flex-basis: 44px;
+  }
+}
+
+@media (max-width: 380px) {
+  .reis-customer-nav-bar {
+    padding-inline: 12px;
+    gap: 10px;
+  }
+
+  .reis-customer-brand {
+    gap: 9px;
+  }
+
+  .reis-customer-brand-caption {
+    font-size: 7px;
+    letter-spacing: 0.2em;
+  }
+}

@@ -20,6 +20,9 @@ const links = [
 export default function CustomerNavigation() {
   const [open, setOpen] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
+  const [brandName, setBrandName] = useState('REIS EVENT');
+  const [brandSubtext, setBrandSubtext] = useState('SERVICES');
+  const [announcement, setAnnouncement] = useState('');
   const [cartCount, setCartCount] = useState(0);
   const pathname = usePathname();
 
@@ -28,7 +31,12 @@ export default function CustomerNavigation() {
 
     getHomepageContent()
       .then((content) => {
-        if (mounted) setLogoUrl(content.logoUrl || '');
+        if (mounted) {
+          setLogoUrl(content.logoUrl || '');
+          setBrandName(content.brandName || 'REIS EVENT');
+          setBrandSubtext(content.brandSubtext || 'SERVICES');
+          setAnnouncement(content.announcement || '');
+        }
       })
       .catch(() => {
         // Keep the REIS text fallback if CMS content is unavailable.
@@ -89,26 +97,29 @@ export default function CustomerNavigation() {
       />
     ) : (
       <span className="reis-customer-menu-icon reis-customer-menu-fallback">
-        R
+        RIS
       </span>
     );
   }
 
   return (
     <>
+      {announcement && (
+        <div className="reis-customer-announcement">{announcement}</div>
+      )}
       <header className="reis-customer-nav">
         <div className="reis-customer-nav-bar">
           <Link
             href="/shop"
             className="reis-customer-brand"
             onClick={closeMenu}
-            aria-label="REIS Event Services — shop"
+            aria-label={`${brandName} ${brandSubtext} — shop`}
           >
             <LogoMark />
             <span className="reis-customer-brand-copy">
-              <span className="reis-customer-brand-name">REIS</span>
+              <span className="reis-customer-brand-name">{brandName}</span>
               <span className="reis-customer-brand-caption">
-                EVENT SERVICES
+                {brandSubtext}
               </span>
             </span>
           </Link>
