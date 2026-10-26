@@ -663,3 +663,14 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+
+/* Live word count for portfolio project descriptions */
+.portfolio-description-count {
+  display: block;
+  margin-top: 7px;
+  color: #77766f;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: right;
+}

@@ -23,13 +23,13 @@ const shoppingPaths = [
   },
   {
     number: "03",
-    title: "Portfolio",
+    title: "Book Us Now",
     subtitle: "A glimpse of celebrations we've helped create.",
     description:
-      "Explore our event styling and previous work.",
+      "Explore completed event styling projects and tell us about your celebration.",
     image: "/images/commerce-styling.jpg",
     href: "/booking/styling",
-    action: "Let's plan your event",
+    action: "Book Us Now",
   },
 ];
 

@@ -1,0 +1,128 @@
+.reis-styling-page {
+  --styling-paper: var(--paper, #faf9f6);
+  --styling-cream: var(--cream, #f3f0ea);
+  --styling-ink: var(--ink, #20201d);
+  --styling-muted: var(--muted, #77756e);
+  --styling-olive: var(--olive, #68765b);
+  min-height: 100vh;
+  padding: clamp(42px, 7vw, 96px) 6vw 100px;
+  background: var(--styling-cream);
+  color: var(--styling-ink);
+}
+.reis-styling-wrap {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+.reis-styling-hero {
+  max-width: 800px;
+  padding: 24px 0 68px;
+}
+.reis-styling-hero h1 {
+  margin: 20px 0;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(2.7rem, 6.5vw, 5.5rem);
+  font-weight: 400;
+  letter-spacing: -.045em;
+  line-height: 1.04;
+}
+.reis-styling-hero h1 em {
+  color: var(--styling-olive);
+  font-weight: 400;
+}
+.reis-styling-hero .lead {
+  max-width: 660px;
+  color: var(--styling-muted);
+  font-size: clamp(1rem, 1.5vw, 1.13rem);
+  line-height: 1.85;
+}
+.reis-hire-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 38px;
+  min-width: 190px;
+  margin-top: 20px;
+  padding: 17px 21px;
+  border: 1px solid var(--styling-ink);
+  background: var(--styling-ink);
+  color: white;
+  font: inherit;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+}
+.reis-hire-button:hover {
+  background: transparent;
+  color: var(--styling-ink);
+}
+.reis-hire-button span { font-size: 1.2rem; }
+.reis-hire-form {
+  margin: 0 0 78px;
+  padding: clamp(22px, 4vw, 46px);
+  border: 1px solid #dedbd2;
+  background: var(--styling-paper);
+}
+.reis-projects-section {
+  padding-top: 50px;
+  border-top: 1px solid #d8d5cc;
+}
+.reis-projects-heading { margin-bottom: 32px; }
+.reis-projects-heading h2 {
+  margin: 13px 0 10px;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 400;
+  letter-spacing: -.035em;
+}
+.reis-projects-heading p,
+.reis-projects-message {
+  color: var(--styling-muted);
+  line-height: 1.8;
+}
+.reis-projects-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(28px, 4vw, 56px) 28px;
+}
+.reis-project-card { min-width: 0; background: var(--styling-paper); }
+.reis-project-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: clamp(75px, 12vw, 145px);
+  gap: 5px;
+  background: var(--styling-cream);
+}
+.reis-project-image { min-width: 0; overflow: hidden; background: #e6e1d7; }
+.reis-project-image.is-featured { grid-column: span 4; grid-row: span 2; }
+.reis-project-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .45s ease;
+}
+.reis-project-card:hover .reis-project-image img { transform: scale(1.025); }
+.reis-project-copy { padding: 24px clamp(18px, 2.5vw, 30px) 30px; }
+.reis-project-copy h3 {
+  margin: 0 0 12px;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(1.45rem, 2.5vw, 2rem);
+  font-weight: 400;
+}
+.reis-project-copy p {
+  margin: 0;
+  color: var(--styling-muted);
+  line-height: 1.85;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 720px) {
+  .reis-styling-page { padding: 38px 5vw 64px; }
+  .reis-styling-hero { padding: 18px 0 48px; }
+  .reis-projects-grid { grid-template-columns: 1fr; gap: 26px; }
+  .reis-project-gallery { grid-auto-rows: 100px; }
+  .reis-projects-heading { margin-bottom: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reis-hire-button,
+  .reis-project-image img { transition: none; }
+}

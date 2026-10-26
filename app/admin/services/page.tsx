@@ -356,6 +356,15 @@ export default function ServicesPortfolioPage() {
 
     if (saving) return;
 
+    const descriptionWordCount = form.description.trim()
+      ? form.description.trim().split(/\s+/).length
+      : 0;
+
+    if (descriptionWordCount > 2000) {
+      setError("The project description cannot exceed 2,000 words.");
+      return;
+    }
+
     if (images.length < MIN_IMAGE_COUNT || images.length > MAX_IMAGE_COUNT) {
       setError("Each portfolio design needs between 2 and 10 images.");
       return;
@@ -699,7 +708,7 @@ export default function ServicesPortfolioPage() {
                 <span>Description *</span>
                 <textarea
                   required
-                  maxLength={5000}
+                  maxLength={20000}
                   rows={4}
                   value={form.description}
                   onChange={(event) =>
@@ -708,8 +717,13 @@ export default function ServicesPortfolioPage() {
                       description: event.target.value,
                     }))
                   }
-                  placeholder="Describe the event, styling choices and details…"
+                  placeholder="Describe the completed event, styling choices and details (maximum 2,000 words)…"
                 />
+                <span className="portfolio-description-count" aria-live="polite">
+                  {form.description.trim()
+                    ? form.description.trim().split(/\s+/).length
+                    : 0} / 2,000 words
+                </span>
               </label>
 
               <div className="portfolio-form-row">

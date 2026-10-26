@@ -11,7 +11,7 @@ const links = [
   { label: 'Shop', href: '/shop', Icon: ShoppingBag },
   { label: 'Event rentals', href: '/booking/rentals', Icon: Armchair },
   { label: 'Tents & marquees', href: '/booking/tents', Icon: Tent },
-  { label: 'Book Us', href: '/booking/styling', Icon: Sparkles },
+  { label: 'Book Us Now', href: '/booking/styling', Icon: Sparkles },
   { label: 'Cart', href: '/cart', Icon: ShoppingCart },
   { label: 'My orders', href: '/orders', Icon: Package },
   { label: 'My account', href: '/account/login', Icon: UserRound },

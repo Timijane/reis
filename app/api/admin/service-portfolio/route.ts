@@ -10,6 +10,14 @@ const COLLECTION = "servicePortfolio";
 const MAX_IMAGES = 10;
 const MIN_IMAGES = 2;
 const MAX_TOTAL_BYTES = 15 * 1024 * 1024;
+const MAX_DESCRIPTION_CHARACTERS = 20000;
+const MAX_DESCRIPTION_WORDS = 2000;
+
+function countDescriptionWords(value: string): number {
+  const trimmed = value.trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
+
 const ALLOWED_FORMATS = new Set(["jpg", "jpeg", "png", "webp"]);
 
 type PortfolioImage = {
@@ -178,15 +186,21 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const title = validateText(body.title, 120, true);
-    const description = validateText(body.description, 5000, true);
+    const description = validateText(body.description, MAX_DESCRIPTION_CHARACTERS, true);
     const category = validateText(body.category, 100, true);
     const images = validateImages(body.images);
 
-    if (!title || !description || !category || !images) {
+    if (
+      !title ||
+      !description ||
+      !category ||
+      !images ||
+      countDescriptionWords(description) > MAX_DESCRIPTION_WORDS
+    ) {
       return NextResponse.json(
         {
           error:
-            "Provide a title, description, category and 2–10 valid images. The combined image size must not exceed 15 MB.",
+            "Provide a title, a description of no more than 2,000 words, a category and 2–10 valid images. The combined image size must not exceed 15 MB.",
         },
         { status: 400 }
       );
@@ -281,11 +295,15 @@ export async function PATCH(request: Request) {
     }
 
     if ("description" in body) {
-      const description = validateText(body.description, 5000, true);
+      const description = validateText(body.description, MAX_DESCRIPTION_CHARACTERS, true);
 
-      if (!description) {
+      if (!description || countDescriptionWords(description) > MAX_DESCRIPTION_WORDS) {
         return NextResponse.json(
-          { error: "A valid description is required." },
+          {
+            error: !description
+              ? "A valid description is required."
+              : "The description cannot exceed 2,000 words.",
+          },
           { status: 400 }
         );
       }
