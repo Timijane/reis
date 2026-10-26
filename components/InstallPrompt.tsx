@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getHomepageContent } from "@/lib/cms/homepage";
+import type { CSSProperties } from "react";
+import {
+  defaultHomepageContent,
+  getHomepageContent,
+} from "@/lib/cms/homepage";
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -21,6 +25,8 @@ export default function InstallPrompt() {
   const [instructions, setInstructions] = useState(false);
   const [logoUrl, setLogoUrl] = useState("");
   const [brandName, setBrandName] = useState("REIS Event Services");
+  const [palette, setPalette] = useState(defaultHomepageContent.palette);
+  const [desktop, setDesktop] = useState(false);
   const [installed, setInstalled] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [installing, setInstalling] = useState(false);
@@ -39,6 +45,7 @@ export default function InstallPrompt() {
             ? content.brandName.trim()
             : "REIS Event Services"
         );
+        setPalette(content.palette);
       })
       .catch((error) => {
         console.error("Failed to load REIS CMS logo for install prompt:", error);
@@ -61,6 +68,9 @@ export default function InstallPrompt() {
       !(window.navigator as Navigator & { standalone?: boolean }).standalone;
 
     setIos(isIos);
+    setDesktop(
+      !/android|iphone|ipad|ipod/i.test(window.navigator.userAgent)
+    );
 
     if (standalone()) return;
 
@@ -162,6 +172,14 @@ export default function InstallPrompt() {
       aria-modal="false"
       aria-labelledby="reis-install-title"
       className="reis-install"
+      style={{
+        "--install-cream": palette.cream,
+        "--install-paper": palette.paper,
+        "--install-ink": palette.ink,
+        "--install-muted": palette.muted,
+        "--install-olive": palette.olive,
+        "--install-footer": palette.footer,
+      } as CSSProperties}
     >
       <button
         type="button"
@@ -203,7 +221,9 @@ export default function InstallPrompt() {
           <p className="reis-install__instructions" role="status">
             {ios
               ? 'In Safari, tap Share, then choose "Add to Home Screen".'
-              : 'Open your browser menu and look for "Install app", "Install REIS" or "Add to Home screen". The option depends on your browser.'}
+              : desktop
+                ? 'In Chrome or Edge, look for the Install icon in the address bar, or open the browser menu and choose "Install REIS" or "Install page as app". If the option is missing, update your browser and reload this page.'
+                : 'Open your browser menu and look for "Install app", "Install REIS" or "Add to Home screen". The option depends on your browser.'}
           </p>
         )}
 
@@ -250,9 +270,9 @@ export default function InstallPrompt() {
           gap: 16px;
           width: min(440px, calc(100vw - 32px));
           padding: 24px;
-          border: 1px solid #ded8ca;
-          background: #f7f4ed;
-          color: #282a25;
+          border: 1px solid color-mix(in srgb, var(--install-ink) 18%, transparent);
+          background: var(--install-cream);
+          color: var(--install-ink);
           box-shadow: 0 18px 55px rgba(25, 32, 24, 0.2);
           font-family: Arial, Helvetica, sans-serif;
         }
@@ -263,7 +283,7 @@ export default function InstallPrompt() {
           right: 12px;
           border: 0;
           background: transparent;
-          color: #454a40;
+          color: var(--install-ink);
           font-size: 26px;
           cursor: pointer;
         }
@@ -274,8 +294,8 @@ export default function InstallPrompt() {
           width: 56px;
           height: 56px;
           overflow: hidden;
-          background: #354737;
-          color: #f7f4ed;
+          background: var(--install-olive);
+          color: var(--install-cream);
           font-family: Georgia, serif;
           font-size: 19px;
           letter-spacing: 1px;
@@ -290,7 +310,7 @@ export default function InstallPrompt() {
 
         .reis-install__eyebrow {
           margin: 0 20px 8px 0;
-          color: #596b51;
+          color: var(--install-olive);
           font-size: 10px;
           font-weight: 700;
           letter-spacing: 2px;
@@ -306,7 +326,7 @@ export default function InstallPrompt() {
 
         .reis-install__copy > p:not(.reis-install__eyebrow) {
           margin: 0 0 16px;
-          color: #62635b;
+          color: var(--install-muted);
           font-size: 13px;
           line-height: 1.65;
           overflow-wrap: anywhere;
@@ -315,9 +335,9 @@ export default function InstallPrompt() {
         .reis-install__copy .reis-install__instructions,
         .reis-install__copy .reis-install__status {
           padding: 10px;
-          border-left: 2px solid #596b51;
-          background: #eeeadf;
-          color: #354737;
+          border-left: 2px solid var(--install-olive);
+          background: color-mix(in srgb, var(--install-cream) 75%, var(--install-paper));
+          color: var(--install-olive);
         }
 
         .reis-install__actions {
@@ -336,8 +356,8 @@ export default function InstallPrompt() {
         }
 
         .reis-install__primary {
-          border: 1px solid #354737;
-          background: #354737;
+          border: 1px solid var(--install-olive);
+          background: var(--install-olive);
           color: #fff;
         }
 
@@ -347,9 +367,9 @@ export default function InstallPrompt() {
         }
 
         .reis-install__secondary {
-          border: 1px solid #d7d1c5;
+          border: 1px solid color-mix(in srgb, var(--install-ink) 18%, transparent);
           background: transparent;
-          color: #354737;
+          color: var(--install-olive);
         }
 
         @media (max-width: 480px) {

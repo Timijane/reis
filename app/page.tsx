@@ -44,13 +44,15 @@ export default function Home() {
     };
   }, []);
 
-  // Do not render the default hero before the saved CMS content is loaded.
+  // Keep the loading screen logo-only while CMS content loads.
   if (!contentLoaded) {
     return (
       <main className="homepage-loading" aria-busy="true">
-        <div className="homepage-loading-mark">REIS</div>
-        <div className="homepage-loading-line" />
-        <p>Preparing something beautiful</p>
+        <img
+          src="/api/pwa/icon?size=192"
+          alt=""
+          className="homepage-loading-logo"
+        />
       </main>
     );
   }

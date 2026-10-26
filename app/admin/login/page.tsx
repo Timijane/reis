@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
@@ -165,6 +166,20 @@ export default function AdminLoginPage() {
     }
   };
 
+  const authStyle = {
+    "--cream": content.palette.cream,
+    "--paper": content.palette.paper,
+    "--ink": content.palette.ink,
+    "--muted": content.palette.muted,
+    "--olive": content.palette.olive,
+    "--footer": content.palette.footer,
+    "--line": `color-mix(in srgb, ${content.palette.ink} 15%, transparent)`,
+    "--admin-login-image": `url(${JSON.stringify(
+      content.heroImage ||
+        "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1800&q=90"
+    )})`,
+  } as CSSProperties;
+
   if (checkingSession) {
     return (
       <main className="admin-auth-loading">
@@ -175,7 +190,7 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="admin-auth-page">
+    <main className="admin-auth-page" style={authStyle}>
       <section className="admin-auth-visual">
         <div className="admin-auth-overlay" />
 
