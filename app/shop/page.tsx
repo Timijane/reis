@@ -28,8 +28,8 @@ const shoppingPaths = [
     description:
       "Explore our event styling and previous work.",
     image: "/images/commerce-styling.jpg",
-    href: "/#work",
-    action: "Explore our work",
+    href: "/booking/styling",
+    action: "Let's plan your event",
   },
 ];
 
