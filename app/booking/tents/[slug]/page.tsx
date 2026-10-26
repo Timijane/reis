@@ -152,124 +152,142 @@ export default function TentDetailPage({
 
   return (
     <main className="container reis-tent-detail">
-      <section
-        style={{
-          padding: '48px 0 60px',
-          maxWidth: 900,
-        }}
-      >
-        <Link className="muted" href="/booking/tents">
-          ← Back to Tents
-        </Link>
+      <section className="reis-tent-page">
+        <nav className="reis-tent-breadcrumb" aria-label="Breadcrumb">
+          <Link href="/booking/tents">← Back to Tents</Link>
+          <span>REIS EVENT SERVICES</span>
+        </nav>
 
-        <div style={{ marginTop: 30 }}>
-          <div className="eyebrow">MARQUEE / TENT</div>
-
+        <header className="reis-tent-heading">
+          <p className="eyebrow">MARQUEES &amp; TENTS</p>
           <h1>{tent.name}</h1>
-
-          <p className="muted">
+          <p className="reis-tent-description">
             {tent.description ||
               'Professional marquee and tent hire from REIS EVENT.'}
           </p>
+        </header>
 
-          {tent.dimensions && (
-            <p className="muted">
-              Dimensions: {tent.dimensions}
-            </p>
-          )}
-
-          {tent.capacity && (
-            <p className="muted">
-              Capacity: {tent.capacity}
-            </p>
-          )}
-
-          <div
-            style={{
-              marginTop: 24,
-              padding: 24,
-              border: '1px solid rgba(0,0,0,.12)',
-            }}
-          >
-            <div className="price">
-              £{price.toFixed(2)}{' '}
-              <small className="muted">/ item</small>
-            </div>
-
-            {promo && (
-              <p className="muted">
-                Promotion active · regular £{tent.price.toFixed(2)}
-              </p>
+        <div className="reis-tent-booking-layout">
+          <div className="reis-tent-product-panel">
+            {tent.image ? (
+              <div className="reis-tent-image-wrap">
+                <img
+                  className="reis-tent-product-image"
+                  src={tent.image}
+                  alt={tent.name}
+                />
+              </div>
+            ) : (
+              <div className="reis-tent-image-placeholder">
+                <span>REIS EVENT SERVICES</span>
+                <p>{tent.name}</p>
+              </div>
             )}
 
-            <div style={{ marginTop: 28 }}>
-              <label>
-                Event date
-                <input
-                  type="date"
-                  min={minimumDate}
-                  value={eventDate}
-                  onChange={(event) =>
-                    setEventDate(event.target.value)
-                  }
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    maxWidth: 360,
-                    marginTop: 8,
-                    padding: 12,
-                  }}
-                />
-              </label>
-            </div>
+            <div className="reis-tent-product-details">
+              <p className="eyebrow">PRODUCT DETAILS</p>
 
-            <div style={{ marginTop: 20 }}>
-              <label>
-                Quantity
-                <input
-                  type="number"
-                  min={minimum}
-                  max={maximum}
-                  value={quantity}
-                  onChange={(event) =>
-                    setQuantity(Number(event.target.value))
-                  }
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    maxWidth: 160,
-                    marginTop: 8,
-                    padding: 12,
-                  }}
-                />
-              </label>
+              {tent.dimensions && (
+                <div className="reis-tent-detail-row">
+                  <span>Dimensions</span>
+                  <strong>{tent.dimensions}</strong>
+                </div>
+              )}
+
+              {tent.capacity && (
+                <div className="reis-tent-detail-row">
+                  <span>Capacity</span>
+                  <strong>{tent.capacity}</strong>
+                </div>
+              )}
 
               {tent.quantityAvailable !== undefined && (
-                <p className="muted">
-                  Available quantity: {tent.quantityAvailable}
+                <div className="reis-tent-detail-row">
+                  <span>Availability</span>
+                  <strong>{tent.quantityAvailable} available</strong>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="reis-tent-form-panel">
+            <div className="reis-tent-price-block">
+              <p className="eyebrow">YOUR HIRE SELECTION</p>
+
+              <div className="reis-tent-price">
+                £{price.toFixed(2)}
+                <span> / item</span>
+              </div>
+
+              {promo && (
+                <p className="reis-tent-promotion">
+                  Promotional price · Regular price £{tent.price.toFixed(2)}
                 </p>
               )}
+
+              <p className="reis-tent-price-note">
+                Select your event date and quantity to continue.
+              </p>
+            </div>
+
+            <div className="reis-tent-form-divider" />
+
+            <div className="reis-tent-field">
+              <label htmlFor="reis-tent-event-date">Event date</label>
+              <input
+                id="reis-tent-event-date"
+                type="date"
+                min={minimumDate}
+                value={eventDate}
+                onChange={(event) => {
+                  setEventDate(event.target.value);
+                  setMessage('');
+                }}
+                required
+              />
+              <span className="reis-tent-field-hint">
+                Choose today or a future date.
+              </span>
+            </div>
+
+            <div className="reis-tent-field">
+              <label htmlFor="reis-tent-quantity">Quantity required</label>
+              <input
+                id="reis-tent-quantity"
+                type="number"
+                min={minimum}
+                max={maximum}
+                step={1}
+                value={quantity}
+                onChange={(event) => {
+                  setQuantity(Number(event.target.value));
+                  setMessage('');
+                }}
+                required
+              />
+              <span className="reis-tent-field-hint">
+                Minimum quantity: {minimum}
+                {maximum !== 999999 ? ` · Maximum: ${maximum}` : ''}
+              </span>
             </div>
 
             {message && (
-              <p
-                style={{
-                  marginTop: 20,
-                  fontWeight: 600,
-                }}
-              >
+              <p className="reis-tent-form-message" role="alert">
                 {message}
               </p>
             )}
 
             <button
               type="button"
-              className="btn"
+              className="btn reis-tent-submit"
               onClick={addToCart}
-              style={{ marginTop: 24 }}
             >
-              Continue with this tent
+              Continue with this tent <span aria-hidden="true">→</span>
             </button>
+
+            <p className="reis-tent-form-footnote">
+              Your selection will be added to your booking cart.
+            </p>
           </div>
         </div>
       </section>

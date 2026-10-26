@@ -2929,3 +2929,320 @@ img { display: block; width: 100%; }
     transition: none;
   }
 }
+
+
+/* REIS premium tent booking form */
+.reis-tent-detail .reis-tent-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 34px 0 88px;
+}
+
+.reis-tent-breadcrumb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.reis-tent-breadcrumb a {
+  color: var(--ink);
+  letter-spacing: .02em;
+  text-transform: none;
+}
+
+.reis-tent-breadcrumb a:hover {
+  color: var(--olive);
+}
+
+.reis-tent-heading {
+  max-width: 760px;
+  padding: 44px 0 36px;
+}
+
+.reis-tent-heading .eyebrow {
+  margin-bottom: 12px;
+  color: var(--olive);
+}
+
+.reis-tent-heading h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(38px, 5.5vw, 66px);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -.025em;
+  overflow-wrap: anywhere;
+}
+
+.reis-tent-description {
+  max-width: 650px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.reis-tent-booking-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr);
+  align-items: start;
+  gap: clamp(28px, 5vw, 68px);
+}
+
+.reis-tent-product-panel,
+.reis-tent-form-panel {
+  min-width: 0;
+}
+
+.reis-tent-image-wrap {
+  overflow: hidden;
+  background: var(--cream);
+  border: 1px solid var(--line);
+}
+
+.reis-tent-product-image {
+  display: block;
+  width: 100%;
+  height: clamp(280px, 39vw, 480px);
+  object-fit: cover;
+  object-position: center;
+}
+
+.reis-tent-image-placeholder {
+  display: flex;
+  min-height: 300px;
+  padding: 32px;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--cream);
+  border: 1px solid var(--line);
+}
+
+.reis-tent-image-placeholder span {
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: .2em;
+}
+
+.reis-tent-image-placeholder p {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.1;
+}
+
+.reis-tent-product-details {
+  margin-top: 26px;
+  padding: 22px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.reis-tent-product-details > .eyebrow {
+  margin-bottom: 16px;
+}
+
+.reis-tent-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.reis-tent-detail-row span {
+  color: var(--muted);
+}
+
+.reis-tent-detail-row strong {
+  font-weight: 500;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.reis-tent-form-panel {
+  padding: clamp(22px, 3vw, 34px);
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.reis-tent-price-block .eyebrow {
+  margin-bottom: 14px;
+  color: var(--olive);
+}
+
+.reis-tent-price {
+  font-family: var(--serif);
+  font-size: clamp(36px, 4vw, 48px);
+  font-weight: 500;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.reis-tent-price > span {
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.reis-tent-promotion {
+  margin: 12px 0 0;
+  color: var(--olive);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.reis-tent-price-note {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.reis-tent-form-divider {
+  height: 1px;
+  margin: 26px 0;
+  background: var(--line);
+}
+
+.reis-tent-field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.reis-tent-field:first-of-type {
+  margin-top: 0;
+}
+
+.reis-tent-field label {
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .035em;
+}
+
+.reis-tent-detail .reis-tent-field input {
+  display: block;
+  width: 100%;
+  min-height: 50px;
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid rgba(22, 22, 20, .22);
+  border-radius: 0;
+  font: 13px var(--sans);
+}
+
+.reis-tent-detail .reis-tent-field input:hover {
+  border-color: var(--olive);
+}
+
+.reis-tent-field-hint {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.reis-tent-form-message {
+  margin: 20px 0 0;
+  padding: 13px 14px;
+  color: #842f26;
+  background: #fbefec;
+  border-left: 3px solid #a84d40;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.reis-tent-detail .reis-tent-submit {
+  display: flex;
+  width: 100%;
+  margin-top: 28px;
+  white-space: normal;
+}
+
+.reis-tent-submit span {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.reis-tent-form-footnote {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .reis-tent-detail .reis-tent-page {
+    padding-top: 24px;
+    padding-bottom: 56px;
+  }
+
+  .reis-tent-heading {
+    padding: 34px 0 26px;
+  }
+
+  .reis-tent-booking-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .reis-tent-product-image {
+    height: auto;
+    max-height: 420px;
+    aspect-ratio: 4 / 3;
+  }
+
+  .reis-tent-image-placeholder {
+    min-height: 230px;
+  }
+
+  .reis-tent-form-panel {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 420px) {
+  .reis-tent-breadcrumb {
+    align-items: flex-start;
+    font-size: 9px;
+  }
+
+  .reis-tent-breadcrumb > span {
+    max-width: 120px;
+    text-align: right;
+  }
+
+  .reis-tent-heading h1 {
+    font-size: 38px;
+  }
+
+  .reis-tent-form-panel {
+    padding: 21px 16px;
+  }
+
+  .reis-tent-detail-row {
+    gap: 12px;
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reis-tent-breadcrumb a {
+    transition: none;
+  }
+}
