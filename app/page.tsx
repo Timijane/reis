@@ -9,6 +9,126 @@ import {
   type HomepageImageItem,
 } from "@/lib/cms/homepage";
 
+function getSocialHref(platform: string, value: string): string {
+  const destination = value.trim();
+
+  if (!destination) return "";
+
+  if (platform === "phone") {
+    const number = destination.replace(/[^+\d]/g, "");
+    return number ? `tel:${number}` : "";
+  }
+
+  if (platform === "email") {
+    if (!destination.includes("@") || /\s/.test(destination)) return "";
+    return `mailto:${destination}`;
+  }
+
+  if (platform === "whatsapp") {
+    if (/^https?:\/\//i.test(destination)) return destination;
+    const number = destination.replace(/\D/g, "");
+    return number ? `https://wa.me/${number}` : "";
+  }
+
+  return /^https?:\/\//i.test(destination)
+    ? destination
+    : `https://${destination}`;
+}
+
+
+function SocialIcon({ platform }: { platform: string }) {
+  const common = {
+    viewBox: "0 0 24 24",
+    width: 22,
+    height: 22,
+    fill: "currentColor",
+    "aria-hidden": true as const,
+    focusable: false as const,
+  };
+
+  switch (platform) {
+    case "instagram":
+      return (
+        <svg {...common}>
+          <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="2" />
+          <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" />
+          <circle cx="17.5" cy="6.5" r="1.2" />
+        </svg>
+      );
+
+    case "facebook":
+      return (
+        <svg {...common}>
+          <path d="M13.5 21v-8h2.8l.4-3h-3.2V8.1c0-.9.3-1.5 1.6-1.5h1.7V3.9c-.8-.1-1.7-.2-2.6-.2-2.6 0-4.4 1.6-4.4 4.5V10H7v3h2.8v8z" />
+        </svg>
+      );
+
+    case "whatsapp":
+      return (
+        <svg {...common}>
+          <path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.4-4.7a8.5 8.5 0 1 1 16.1-4.1Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M8.1 7.5c-.3.4-.6.9-.6 1.5 0 2.4 3.1 5.6 5.7 6.5.8.3 1.5.2 2-.3l.8-1.1-2.3-1.1-.8.9c-1.1-.5-2.1-1.4-2.7-2.5l.8-.9-1.1-2.3z" />
+        </svg>
+      );
+
+    case "tiktok":
+      return (
+        <svg {...common}>
+          <path d="M14 3h3c.2 2 1.3 3.5 3 4.2v3.1a8.5 8.5 0 0 1-3-1v6.2a5.7 5.7 0 1 1-5.7-5.7c.4 0 .8 0 1.2.1V13a2.7 2.7 0 1 0 1.5 2.5z" />
+        </svg>
+      );
+
+    case "youtube":
+      return (
+        <svg {...common}>
+          <path d="M23 7.1a3 3 0 0 0-2.1-2.1C19 4.5 12 4.5 12 4.5s-7 0-8.9.5A3 3 0 0 0 1 7.1 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.9 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.9 31 31 0 0 0-.5-4.9ZM9.5 15.5v-7l6 3.5z" />
+        </svg>
+      );
+
+    case "linkedin":
+      return (
+        <svg {...common}>
+          <path d="M5.2 8.5A1.9 1.9 0 1 0 5.2 4.7a1.9 1.9 0 0 0 0 3.8ZM3.5 10h3.4v10.5H3.5zM9 10h3.3v1.4h.1a3.6 3.6 0 0 1 3.2-1.7c3.4 0 4 2.2 4 5v5.8h-3.4v-5.2c0-1.2 0-2.8-1.8-2.8s-2.1 1.3-2.1 2.7v5.3H9z" />
+        </svg>
+      );
+
+    case "pinterest":
+      return (
+        <svg {...common}>
+          <path d="M12 2a10 10 0 0 0-3.6 19.3c0-.8 0-1.8.2-2.7l1.3-5.5s-.3-.6-.3-1.5c0-1.4.8-2.5 1.9-2.5.9 0 1.3.7 1.3 1.5 0 .9-.6 2.3-.9 3.6-.3 1.1.6 2 1.7 2 2 0 3.4-2.5 3.4-5.4 0-2.2-1.5-3.9-4.2-3.9-3.1 0-5 2.3-5 4.8 0 .9.3 1.8.8 2.3.2.2.2.4.2.7l-.3 1.1c0 .3-.3.4-.6.3-1.5-.6-2.2-2.2-2.2-4 0-3 2.5-6.6 7.6-6.6 4.1 0 6.8 3 6.8 6.2 0 4.3-2.4 7.5-5.9 7.5-1.2 0-2.3-.7-2.7-1.4l-.8 3a9.7 9.7 0 0 1-1.4 2.5A10 10 0 1 0 12 2Z" />
+        </svg>
+      );
+
+    case "x":
+      return (
+        <svg {...common}>
+          <path d="M18.9 2H22l-6.8 7.8L23 22h-6.1l-4.8-7-6.1 7H2.9l7.3-8.4L2 2h6.3l4.4 6.5ZM17.8 20h1.7L7.3 3.9H5.5Z" />
+        </svg>
+      );
+
+    case "email":
+      return (
+        <svg {...common}>
+          <path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm9 8L4 7v10h16V7Zm0-2 7-4H5Z" />
+        </svg>
+      );
+
+    case "phone":
+      return (
+        <svg {...common}>
+          <path d="M6.6 2h3l1.5 5-2 1.5a15 15 0 0 0 6.4 6.4l1.5-2 5 1.5v3c0 1.1-.9 2-2 2C10 19.4 4.6 14 4.6 7c0-1.1.9-2 2-2Z" />
+        </svg>
+      );
+
+    default:
+      return (
+        <svg {...common}>
+          <path d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14zM5 5h6v2H5v12h12v-6h2v8H3V5z" />
+        </svg>
+      );
+  }
+}
+
 const galleryClasses = [
   "gallery-tall gallery-image g1",
   "gallery-image g2",
@@ -337,6 +457,46 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="social-section" id="social">
+        <div className="social-section-heading">
+          <p className="eyebrow">STAY CONNECTED</p>
+          <h2>Connect with REIS</h2>
+          <p>Follow our channels or get in touch with our team.</p>
+        </div>
+
+        <div className="social-links">
+          {content.socialLinks
+            .filter(
+              (item) =>
+                item.visible &&
+                (item.placement === "landing" || item.placement === "both")
+            )
+            .map((item) => {
+              const href = getSocialHref(item.platform, item.url);
+              if (!href) return null;
+
+              const external = !["phone", "email"].includes(item.platform);
+
+              return (
+                <a
+                  key={item.id}
+                  className={`social-link social-${item.style}`}
+                  data-platform={item.platform}
+                  href={href}
+                  target={external ? "_blank" : undefined}
+                  rel={external ? "noopener noreferrer" : undefined}
+                  aria-label={item.label}
+                >
+                  {item.style !== "text" && <SocialIcon platform={item.platform} />}
+                  {item.style !== "logo" && item.style !== "icon" && (
+                    <span>{item.label}</span>
+                  )}
+                </a>
+              );
+            })}
+        </div>
+      </section>
+
       <section
         id="contact"
         className="cta-section"
@@ -353,21 +513,38 @@ export default function Home() {
         <p>{content.finalCtaDescription}</p>
 
         <div className="cta-actions">
-          <a
-            className="button button-dark"
-            href={`tel:${content.phone1.replace(/\s/g, "")}`}
-          >
-            {content.finalCtaCall}
-          </a>
+          {(() => {
+            const phone = content.socialLinks.find(
+              (item) => item.visible && item.platform === "phone"
+            );
+            const href = phone ? getSocialHref(phone.platform, phone.url) : "";
 
-          <a
-            className="button button-dark"
-            href="https://wa.me/447470532855"
-            target="_blank"
-            rel="noreferrer"
-          >
-            {content.finalCtaWhatsapp}
-          </a>
+            return href ? (
+              <a className="button button-dark" href={href}>
+                {content.finalCtaCall}
+              </a>
+            ) : null;
+          })()}
+
+          {(() => {
+            const whatsapp = content.socialLinks.find(
+              (item) => item.visible && item.platform === "whatsapp"
+            );
+            const href = whatsapp
+              ? getSocialHref(whatsapp.platform, whatsapp.url)
+              : "";
+
+            return href ? (
+              <a
+                className="button button-dark"
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {content.finalCtaWhatsapp}
+              </a>
+            ) : null;
+          })()}
         </div>
       </section>
 
@@ -412,13 +589,35 @@ export default function Home() {
         <p>{content.footerTagline}</p>
 
         <div className="footer-contact">
-          <a href={`tel:${content.phone1.replace(/\s/g, "")}`}>
-            {content.phone1}
-          </a>
-          <a href={`tel:${content.phone2.replace(/\s/g, "")}`}>
-            {content.phone2}
-          </a>
-          <a href={`mailto:${content.email}`}>{content.email}</a>
+          {content.socialLinks
+            .filter(
+              (item) =>
+                item.visible &&
+                (item.placement === "footer" || item.placement === "both")
+            )
+            .map((item) => {
+              const href = getSocialHref(item.platform, item.url);
+              if (!href) return null;
+
+              const external = !["phone", "email"].includes(item.platform);
+
+              return (
+                <a
+                  key={item.id}
+                  className={`social-link social-${item.style}`}
+                  data-platform={item.platform}
+                  href={href}
+                  target={external ? "_blank" : undefined}
+                  rel={external ? "noopener noreferrer" : undefined}
+                  aria-label={item.label}
+                >
+                  {item.style !== "text" && <SocialIcon platform={item.platform} />}
+                  {item.style !== "logo" && item.style !== "icon" && (
+                    <span>{item.label}</span>
+                  )}
+                </a>
+              );
+            })}
         </div>
 
         <div className="footer-bottom">

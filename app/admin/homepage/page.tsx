@@ -22,6 +22,10 @@ import {
   type HomepageImageItem,
   type HomepagePalette,
   type NavItem,
+  type SocialLink,
+  type SocialPlatform,
+  type SocialLinkStyle,
+  type SocialLinkPlacement,
 } from "@/lib/cms/homepage";
 import { watchAdminAuth, type AdminUser } from "@/lib/admin/auth";
 import "./homepage.css";
@@ -233,6 +237,235 @@ function ImageCollectionEditor({
                 hint="Describe the image for accessibility."
               />
             </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function SocialLinksEditor({
+  items,
+  onChange,
+}: {
+  items: SocialLink[];
+  onChange: (items: SocialLink[]) => void;
+}) {
+  const platforms: { value: SocialPlatform; label: string }[] = [
+    { value: "whatsapp", label: "WhatsApp" },
+    { value: "instagram", label: "Instagram" },
+    { value: "facebook", label: "Facebook" },
+    { value: "tiktok", label: "TikTok" },
+    { value: "youtube", label: "YouTube" },
+    { value: "x", label: "X / Twitter" },
+    { value: "linkedin", label: "LinkedIn" },
+    { value: "pinterest", label: "Pinterest" },
+    { value: "email", label: "Email" },
+    { value: "phone", label: "Phone" },
+    { value: "custom", label: "Custom link" },
+  ];
+
+  const styles: { value: SocialLinkStyle; label: string }[] = [
+    { value: "text", label: "Text only" },
+    { value: "logo", label: "Logo only" },
+    { value: "logo-text", label: "Logo + text" },
+    { value: "solid", label: "Solid brand button" },
+    { value: "outline", label: "Outline button" },
+    { value: "icon", label: "Minimal icon button" },
+  ];
+
+  const placements: { value: SocialLinkPlacement; label: string }[] = [
+    { value: "landing", label: "Landing page only" },
+    { value: "footer", label: "Footer only" },
+    { value: "both", label: "Landing page and footer" },
+  ];
+
+  function updateItem(index: number, changes: Partial<SocialLink>) {
+    onChange(
+      items.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, ...changes } : item
+      )
+    );
+  }
+
+  function moveItem(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= items.length) return;
+    const next = [...items];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  }
+
+  function addItem() {
+    onChange([
+      ...items,
+      {
+        id: `social-${Date.now()}`,
+        platform: "custom",
+        label: "New link",
+        url: "",
+        visible: true,
+        placement: "both",
+        style: "logo-text",
+      },
+    ]);
+  }
+
+  function removeItem(index: number) {
+    if (!window.confirm("Remove this social/contact link?")) return;
+    onChange(items.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  return (
+    <div className="collection-editor social-links-editor">
+      <div className="collection-heading">
+        <div>
+          <h3>Social media and contact channels</h3>
+          <p>
+            Manage every public contact link from one place. Each link has
+            independent visibility, placement and appearance settings.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="cms-secondary-button"
+          onClick={addItem}
+        >
+          <Plus size={16} /> Add link
+        </button>
+      </div>
+
+      {items.length === 0 && (
+        <div className="cms-empty">
+          No links configured. Select Add link to create one.
+        </div>
+      )}
+
+      {items.map((item, index) => (
+        <article className="collection-item social-link-item" key={item.id}>
+          <div className="collection-item-top">
+            <div className="collection-index">
+              {String(index + 1).padStart(2, "0")}
+            </div>
+            <strong>{item.label || "Untitled link"}</strong>
+            <div className="collection-actions">
+              <button
+                type="button"
+                title="Move up"
+                onClick={() => moveItem(index, -1)}
+                disabled={index === 0}
+              >
+                <ArrowUp size={16} />
+              </button>
+              <button
+                type="button"
+                title="Move down"
+                onClick={() => moveItem(index, 1)}
+                disabled={index === items.length - 1}
+              >
+                <ArrowDown size={16} />
+              </button>
+              <button
+                type="button"
+                title={item.visible ? "Hide link" : "Show link"}
+                onClick={() => updateItem(index, { visible: !item.visible })}
+              >
+                {item.visible ? <Eye size={16} /> : <EyeOff size={16} />}
+              </button>
+              <button
+                type="button"
+                className="cms-danger"
+                title="Remove link"
+                onClick={() => removeItem(index)}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+
+          <div className="cms-grid">
+            <label className="cms-field">
+              <span>Platform</span>
+              <select
+                value={item.platform}
+                onChange={(event) =>
+                  updateItem(index, {
+                    platform: event.target.value as SocialPlatform,
+                  })
+                }
+              >
+                {platforms.map((platform) => (
+                  <option key={platform.value} value={platform.value}>
+                    {platform.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <Field
+              label="Display label"
+              value={item.label}
+              onChange={(value) => updateItem(index, { label: value })}
+              hint="Example: Follow us on Instagram."
+            />
+
+            <Field
+              label="Destination URL, phone number or email"
+              value={item.url}
+              onChange={(value) => updateItem(index, { url: value })}
+              hint="Enter the full social URL, phone number or email address."
+            />
+
+            <label className="cms-field">
+              <span>Display appearance</span>
+              <select
+                value={item.style}
+                onChange={(event) =>
+                  updateItem(index, {
+                    style: event.target.value as SocialLinkStyle,
+                  })
+                }
+              >
+                {styles.map((style) => (
+                  <option key={style.value} value={style.value}>
+                    {style.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="cms-field">
+              <span>Display location</span>
+              <select
+                value={item.placement}
+                onChange={(event) =>
+                  updateItem(index, {
+                    placement: event.target.value as SocialLinkPlacement,
+                  })
+                }
+              >
+                {placements.map((placement) => (
+                  <option key={placement.value} value={placement.value}>
+                    {placement.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="cms-field social-visibility">
+              <span>Public visibility</span>
+              <select
+                value={item.visible ? "visible" : "hidden"}
+                onChange={(event) =>
+                  updateItem(index, {
+                    visible: event.target.value === "visible",
+                  })
+                }
+              >
+                <option value="visible">Visible</option>
+                <option value="hidden">Hidden</option>
+              </select>
+            </label>
           </div>
         </article>
       ))}
@@ -672,10 +905,18 @@ export default function HomepageAdmin() {
           <Field label="Description" value={content.finalCtaDescription} onChange={(v) => update("finalCtaDescription", v)} multiline />
           <Field label="Call button label" value={content.finalCtaCall} onChange={(v) => update("finalCtaCall", v)} />
           <Field label="WhatsApp button label" value={content.finalCtaWhatsapp} onChange={(v) => update("finalCtaWhatsapp", v)} />
-          <Field label="Phone 1" value={content.phone1} onChange={(v) => update("phone1", v)} />
-          <Field label="Phone 2" value={content.phone2} onChange={(v) => update("phone2", v)} />
-          <Field label="Email" value={content.email} onChange={(v) => update("email", v)} />
         </div>
+      </Section>
+
+      <Section
+        number="08"
+        title="Social media & contact links"
+        description="Manage public social channels, contact destinations, visibility, placement and individual display styles."
+      >
+        <SocialLinksEditor
+          items={content.socialLinks}
+          onChange={(items) => update("socialLinks", items)}
+        />
       </Section>
 
       <Section number="08" title="Footer" description="Footer image, tagline and business details.">

@@ -40,6 +40,39 @@ export interface HomepageGradient {
   mode: "solid" | "gradient";
 }
 
+export type SocialPlatform =
+  | "whatsapp"
+  | "instagram"
+  | "facebook"
+  | "tiktok"
+  | "youtube"
+  | "x"
+  | "linkedin"
+  | "pinterest"
+  | "email"
+  | "phone"
+  | "custom";
+
+export type SocialLinkStyle =
+  | "text"
+  | "logo"
+  | "logo-text"
+  | "solid"
+  | "outline"
+  | "icon";
+
+export type SocialLinkPlacement = "landing" | "footer" | "both";
+
+export interface SocialLink {
+  id: string;
+  platform: SocialPlatform;
+  label: string;
+  url: string;
+  visible: boolean;
+  placement: SocialLinkPlacement;
+  style: SocialLinkStyle;
+}
+
 export interface HomepageContent {
   logoUrl: string;
   heroImage: string;
@@ -116,6 +149,7 @@ export interface HomepageContent {
   finalCtaDescription: string;
   finalCtaCall: string;
   finalCtaWhatsapp: string;
+  socialLinks: SocialLink[];
 
   footerTagline: string;
   footerImage: string;
@@ -330,6 +364,44 @@ export const defaultHomepageContent: HomepageContent = {
     "Tell us what you are planning and let's make the details memorable.",
   finalCtaCall: "Call us",
   finalCtaWhatsapp: "WhatsApp",
+  socialLinks: [
+    {
+      id: "whatsapp-main",
+      platform: "whatsapp",
+      label: "WhatsApp",
+      url: "https://wa.me/447470532855",
+      visible: true,
+      placement: "both",
+      style: "solid",
+    },
+    {
+      id: "phone-main",
+      platform: "phone",
+      label: "Call us",
+      url: "07470 532855",
+      visible: true,
+      placement: "both",
+      style: "logo-text",
+    },
+    {
+      id: "phone-secondary",
+      platform: "phone",
+      label: "Alternative phone",
+      url: "07961 399636",
+      visible: true,
+      placement: "footer",
+      style: "text",
+    },
+    {
+      id: "email-main",
+      platform: "email",
+      label: "Email",
+      url: "Mhiz services@gmail.com",
+      visible: true,
+      placement: "both",
+      style: "text",
+    },
+  ],
 
   footerTagline: "We style your event, You create memories!",
   footerImage: "",
@@ -381,6 +453,47 @@ function normaliseImageItems(
       href: typeof item.href === "string" ? item.href : "",
       alt: typeof item.alt === "string" ? item.alt : "",
       visible: item.visible !== false,
+    }));
+}
+
+function normaliseSocialLinks(
+  value: unknown,
+  fallback: SocialLink[]
+): SocialLink[] {
+  if (!Array.isArray(value)) return fallback;
+
+  const platforms: SocialPlatform[] = [
+    "whatsapp", "instagram", "facebook", "tiktok", "youtube",
+    "x", "linkedin", "pinterest", "email", "phone", "custom",
+  ];
+  const styles: SocialLinkStyle[] = [
+    "text", "logo", "logo-text", "solid", "outline", "icon",
+  ];
+  const placements: SocialLinkPlacement[] = [
+    "landing", "footer", "both",
+  ];
+
+  return value
+    .filter(
+      (item): item is Record<string, unknown> =>
+        typeof item === "object" && item !== null
+    )
+    .map((item, index) => ({
+      id: typeof item.id === "string" && item.id
+        ? item.id
+        : `social-${index + 1}`,
+      platform: platforms.includes(item.platform as SocialPlatform)
+        ? item.platform as SocialPlatform
+        : "custom",
+      label: typeof item.label === "string" ? item.label : "",
+      url: typeof item.url === "string" ? item.url : "",
+      visible: item.visible !== false,
+      placement: placements.includes(item.placement as SocialLinkPlacement)
+        ? item.placement as SocialLinkPlacement
+        : "both",
+      style: styles.includes(item.style as SocialLinkStyle)
+        ? item.style as SocialLinkStyle
+        : "logo-text",
     }));
 }
 
@@ -453,6 +566,7 @@ export async function getHomepageContent(): Promise<HomepageContent> {
 
     rentalCards: normaliseImageItems(data.rentalCards, legacyRentals),
     galleryItems: normaliseImageItems(data.galleryItems, legacyGallery),
+    socialLinks: normaliseSocialLinks(data.socialLinks, defaultHomepageContent.socialLinks),
 
     palette: {
       ...defaultHomepageContent.palette,
