@@ -146,7 +146,7 @@ img { display: block; width: 100%; }
 .cta-actions { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
 .button-dark { background: var(--ink); color: #fff; }
 
-.footer { background: #11110f; color: #eee; padding: 65px 7vw 28px; }
+.footer { background: var(--footer, #11110f); color: #eee; padding: 65px 7vw 28px; }
 .footer-brand { display: flex; align-items: center; gap: 14px; }
 .footer-brand .brand-mark { border-color: #66655e; }
 .footer-brand strong { display: block; font-size: 15px; letter-spacing: .16em; font-weight: 500; }

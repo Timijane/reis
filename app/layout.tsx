@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import InstallPrompt from "@/components/InstallPrompt";
+import CmsBranding from "@/components/CmsBranding";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="en-GB">
       <body>
         {children}
+        <CmsBranding />
         <InstallPrompt />
         <Script
           src="https://upload-widget.cloudinary.com/global/all.js"
